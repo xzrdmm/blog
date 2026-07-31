@@ -15,6 +15,7 @@ export interface AudioState {
   duration: number;
   volume: number;
   error: string;
+  loading: boolean;
 }
 
 type Listener = () => void;
@@ -29,10 +30,11 @@ export class AudioStore {
     duration: 0,
     volume: 1,
     error: '',
+    loading: false,
   };
 
   play(track: Track): void {
-    this.setState({ track, playing: true, error: '' });
+    this.setState({ track, playing: true, error: '', loading: true });
   }
 
   select(track: Track): void {
@@ -67,6 +69,10 @@ export class AudioStore {
 
   setError(error: string): void {
     this.setState({ error });
+  }
+
+  setLoading(loading: boolean): void {
+    this.setState({ loading });
   }
 
   subscribe(listener: Listener): () => void {

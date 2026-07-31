@@ -63,6 +63,14 @@ describe('AudioStore', () => {
     expect(store.state.error).toBe('');
   });
 
+  it('play marks loading and setLoading updates it', () => {
+    const store = new AudioStore();
+    store.play(track);
+    expect(store.state.loading).toBe(true);
+    store.setLoading(false);
+    expect(store.state.loading).toBe(false);
+  });
+
   it('notifies subscribers on state changes', () => {
     const store = new AudioStore();
     const seen: string[] = [];

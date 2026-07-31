@@ -39,6 +39,12 @@ function injectStyles(): void {
       object-fit: cover;
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
+    .ks-audio {
+      display: block;
+      margin-top: 8px;
+      max-width: 280px;
+      height: 36px;
+    }
   `;
   document.head.appendChild(style);
 }
@@ -128,6 +134,10 @@ function enhanceField(button: HTMLButtonElement): void {
 
     if (download) {
       const filename = download.getAttribute('download') ?? '文件';
+      // 官方按钮固定显示 "Download"，改为中文避免和播放混淆
+      if (download.textContent?.trim() === 'Download') {
+        download.textContent = '下载文件';
+      }
       if (!chip) {
         const el = document.createElement('span');
         el.className = 'ks-chip';
@@ -150,6 +160,17 @@ function enhanceField(button: HTMLButtonElement): void {
 
       if (label === '音频文件') {
         void autofillFromAudio(download);
+        if (!group.querySelector('.ks-audio')) {
+          const audio = document.createElement('audio');
+          audio.className = 'ks-audio';
+          audio.controls = true;
+          audio.preload = 'none';
+          const href = download instanceof HTMLAnchorElement ? download.href : '';
+          if (href) {
+            audio.src = href;
+            group.appendChild(audio);
+          }
+        }
       }
     } else if (label === '封面' && !chip) {
       const el = document.createElement('span');

@@ -202,7 +202,7 @@ export default function MusicPlayer({ songs, ref }: Props) {
         />
         <div className="flex justify-between text-xs text-[var(--text-3)] tabular-nums">
           <span>{formatTime(state.currentTime)}</span>
-          <span>{formatTime(state.duration)}</span>
+          <span>{state.loading ? '加载中…' : formatTime(state.duration)}</span>
         </div>
       </div>
 

@@ -10,8 +10,11 @@ export default function AudioHost() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !state.track) return;
-    if (audio.src !== state.track.src) {
-      audio.src = state.track.src;
+    const src = state.track.src;
+    if (!src) return;
+    if (audio.src !== src) {
+      audioStore.setLoading(true);
+      audio.src = src;
       audio.load();
     }
     if (state.playing) {
@@ -39,9 +42,15 @@ export default function AudioHost() {
     <audio
       ref={audioRef}
       onTimeUpdate={(e) => audioStore.setTime(e.currentTarget.currentTime)}
-      onLoadedMetadata={(e) => audioStore.setDuration(e.currentTarget.duration || 0)}
+      onLoadedMetadata={(e) => {
+        audioStore.setDuration(e.currentTarget.duration || 0);
+        audioStore.setLoading(false);
+      }}
       onEnded={() => audioStore.ended()}
-      onError={() => audioStore.setError('音频文件加载失败')}
+      onError={() => {
+        audioStore.setError('音频文件加载失败');
+        audioStore.setLoading(false);
+      }}
       onPlay={() => audioStore.setError('')}
       preload="metadata"
     />
