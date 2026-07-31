@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ProfileCard from '../components/ProfileCard.astro';
+import PostCard from '../components/PostCard.astro';
+import ChatterCard from '../components/ChatterCard.astro';
+import Carousel from '../components/Carousel.astro';
+import { filterPublished, sortByDateDesc } from '../lib/posts';
+import { assetPath } from '../lib/paths';
+import { formatDate } from '../lib/format';
+import { makeExcerpt } from '../lib/content';
+
+const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+const chatters = sortByDateDesc(await getCollection('chatters'));
+const [featured, ...rest] = posts;
+const base = import.meta.env.BASE_URL;
+---
+
+<Base>
+  <section class="hero">
+    <ProfileCard />
+    {featured && (
+      <article class="featured-card glass">
+        <div class="cover">
+          {featured.data.cover && (
+            <img src={assetPath(featured.data.cover)} alt={featured.data.title} />
+          )}
+        </div>
+        <div>
+          <div class="meta">
+            <time datetime={featured.data.date.toISOString()}>
+              {formatDate(featured.data.date)}
+            </time>
+          </div>
+          <h1><a href={`${base}posts/${featured.id}/`}>{featured.data.title}</a></h1>
+          <p class="featured-excerpt">
+            {featured.data.excerpt || makeExcerpt(featured.body ?? '', 120)}
+          </p>
+          <div class="tag-list">
+            {featured.data.tags.map((tag) => (
+              <a class="tag-chip" href={`${base}tags/${encodeURIComponent(tag)}/`}>{tag}</a>
+            ))}
+          </div>
+          <a class="btn btn-primary" href={`${base}posts/${featured.id}/`}>阅读全文</a>
+        </div>
+      </article>
+    )}
+  </section>
+
+  {chatters.length > 0 && (
+    <section class="section">
+      <div class="section-head">
+        <h2>最新说说</h2>
+        <a class="section-more" href={`${base}chatter/`}>查看全部 →</a>
+      </div>
+      <Carousel>
+        {chatters.map((chatter) => <ChatterCard chatter={chatter} />)}
+      </Carousel>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="section-head">
+      <h2>全部文章</h2>
+      <a class="section-more" href={`${base}archive/`}>归档 →</a>
+    </div>
+    {rest.length > 0 ? (
+      <div class="post-grid">
+        {rest.map((post) => <PostCard post={post} />)}
+      </div>
+    ) : featured ? (
+      <p class="empty">目前只有这一篇，快去写新文章吧。</p>
+    ) : (
+      <p class="empty">还没有文章。打开 <a href={`${base}keystatic/`} style="text-decoration:underline">管理后台</a> 写第一篇吧。</p>
+    )}
+  </section>
+</Base>

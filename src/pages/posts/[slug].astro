@@ -1,0 +1,70 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import { filterPublished, getAdjacent, sortByDateDesc } from '../../lib/posts';
+import { formatDate } from '../../lib/format';
+import { assetPath } from '../../lib/paths';
+
+export const getStaticPaths = (async () => {
+  const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post, posts },
+  }));
+}) satisfies GetStaticPaths;
+
+const { post, posts } = Astro.props;
+const { Content } = await render(post);
+const { prev, next } = getAdjacent(post.id, posts);
+const base = import.meta.env.BASE_URL;
+const title = post.data.title;
+---
+
+<Base title={title} description={post.data.excerpt || undefined}>
+  <article>
+    <header class="post-header glass">
+      <div class="meta">
+        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        {post.data.tags.length > 0 && (
+          <div class="tag-list">
+            {post.data.tags.map((tag) => (
+              <a class="tag-chip" href={`${base}tags/${encodeURIComponent(tag)}/`}>{tag}</a>
+            ))}
+          </div>
+        )}
+      </div>
+      <h1>{title}</h1>
+      {post.data.excerpt && <p class="featured-excerpt">{post.data.excerpt}</p>}
+    </header>
+
+    {post.data.cover && (
+      <div class="post-cover">
+        <img src={assetPath(post.data.cover)} alt={title} />
+      </div>
+    )}
+
+    <div class="prose glass">
+      <Content />
+    </div>
+
+    <nav class="post-nav" aria-label="文章导航">
+      {prev ? (
+        <a class="glass" href={`${base}posts/${prev.id}/`}>
+          <span class="label">上一篇</span>
+          {prev.data.title}
+        </a>
+      ) : (
+        <span></span>
+      )}
+      {next ? (
+        <a class="glass next" href={`${base}posts/${next.id}/`}>
+          <span class="label">下一篇</span>
+          {next.data.title}
+        </a>
+      ) : (
+        <span></span>
+      )}
+    </nav>
+  </article>
+</Base>

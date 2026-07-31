@@ -1,0 +1,20 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import { formatDate } from '../lib/format';
+
+interface Props {
+  chatter: CollectionEntry<'chatters'>;
+}
+
+const { chatter } = Astro.props;
+const { Content } = await render(chatter);
+---
+
+<article class="chatter-card glass">
+  <div class="meta">
+    <time datetime={chatter.data.date.toISOString()}>{formatDate(chatter.data.date)}</time>
+  </div>
+  <div class="content">
+    <Content />
+  </div>
+</article>

@@ -1,0 +1,11 @@
+{
+  "title": "我的博客",
+  "bio": "记录代码与生活的碎片：写一点技术笔记，也写一点日常。",
+  "avatar": "/images/avatar.svg",
+  "social": {
+    "github": "",
+    "email": ""
+  },
+  "themeColors": ["#8b7cf6", "#67e8f9", "#f0abfc"],
+  "bgImages": []
+}

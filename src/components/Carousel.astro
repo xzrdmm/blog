@@ -1,0 +1,33 @@
+---
+---
+
+<div class="rail-wrap">
+  <div class="rail">
+    <slot />
+  </div>
+  <button class="btn rail-btn prev" type="button" aria-label="向左滚动">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m15 18-6-6 6-6"></path>
+    </svg>
+  </button>
+  <button class="btn rail-btn next" type="button" aria-label="向右滚动">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="m9 18 6-6-6-6"></path>
+    </svg>
+  </button>
+</div>
+
+<script is:inline>
+  document.querySelectorAll('.rail-wrap').forEach((wrap) => {
+    const rail = wrap.querySelector('.rail');
+    const prev = wrap.querySelector('.rail-btn.prev');
+    const next = wrap.querySelector('.rail-btn.next');
+    if (!rail || !prev || !next) return;
+    prev.addEventListener('click', () =>
+      rail.scrollBy({ left: -rail.clientWidth * 0.8, behavior: 'smooth' }),
+    );
+    next.addEventListener('click', () =>
+      rail.scrollBy({ left: rail.clientWidth * 0.8, behavior: 'smooth' }),
+    );
+  });
+</script>

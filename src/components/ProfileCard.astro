@@ -1,0 +1,21 @@
+---
+import { siteConfig } from '../lib/site';
+import { assetPath } from '../lib/paths';
+
+const github = siteConfig.social.github.trim();
+const email = siteConfig.social.email.trim();
+---
+
+<aside class="profile-card glass">
+  <img class="profile-avatar" src={assetPath(siteConfig.avatar)} alt={`${siteConfig.title} 的头像`} />
+  <h2 class="profile-name">{siteConfig.title}</h2>
+  <p class="profile-bio">{siteConfig.bio}</p>
+  <div class="profile-socials">
+    {github && (
+      <a class="btn" href={`https://github.com/${github}`} target="_blank" rel="noopener">
+        GitHub
+      </a>
+    )}
+    {email && <a class="btn" href={`mailto:${email}`}>邮箱</a>}
+  </div>
+</aside>

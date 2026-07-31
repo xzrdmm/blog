@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { collectTags, filterPublished, sortByDateDesc } from '../../lib/posts';
+
+export const getStaticPaths = (async () => {
+  const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+  const tags = collectTags(posts);
+  return tags.map(({ tag }) => ({
+    params: { tag },
+    props: { posts: posts.filter((post) => post.data.tags.includes(tag)) },
+  }));
+}) satisfies GetStaticPaths;
+
+const { posts } = Astro.props;
+const tag = Astro.params.tag;
+---
+
+<Base title={`标签：${tag}`}>
+  <header class="page-header glass">
+    <h1>#{tag}</h1>
+    <p>{posts.length} 篇文章</p>
+  </header>
+  <div class="post-grid" style="margin-top:20px">
+    {posts.map((post) => <PostCard post={post} />)}
+  </div>
+</Base>

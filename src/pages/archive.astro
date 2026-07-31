@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { filterPublished, groupByYear, sortByDateDesc } from '../lib/posts';
+import { formatDate } from '../lib/format';
+
+const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+const groups = groupByYear(posts);
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="归档">
+  <header class="page-header glass">
+    <h1>归档</h1>
+    <p>共 {posts.length} 篇文章</p>
+  </header>
+  {posts.length === 0 ? (
+    <p class="empty">还没有文章。</p>
+  ) : (
+    [...groups.entries()].map(([year, items]) => (
+      <section class="archive-year">
+        <h2>{year}</h2>
+        <ul class="archive-list">
+          {items.map((post) => (
+            <li>
+              <span class="date">{formatDate(post.data.date)}</span>
+              <a class="title" href={`${base}posts/${post.id}/`}>{post.data.title}</a>
+              {post.data.tags.slice(0, 2).map((tag) => (
+                <a class="tag-chip" href={`${base}tags/${encodeURIComponent(tag)}/`}>{tag}</a>
+              ))}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  )}
+</Base>

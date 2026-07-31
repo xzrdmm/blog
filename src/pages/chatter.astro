@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ChatterCard from '../components/ChatterCard.astro';
+import { sortByDateDesc } from '../lib/posts';
+
+const chatters = sortByDateDesc(await getCollection('chatters'));
+---
+
+<Base title="说说" description="碎片化的日常与灵感">
+  <header class="page-header glass">
+    <h1>说说</h1>
+    <p>碎片化的日常与灵感，按时间倒序排列。</p>
+  </header>
+  {chatters.length > 0 ? (
+    <div class="chatter-feed">
+      {chatters.map((chatter) => <ChatterCard chatter={chatter} />)}
+    </div>
+  ) : (
+    <p class="empty">还没有说说。</p>
+  )}
+</Base>
