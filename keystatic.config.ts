@@ -74,7 +74,7 @@ export default config({
       label: '歌曲',
       slugField: 'title',
       path: 'src/content/songs/*',
-      format: { type: 'json' },
+      format: { data: 'json' },
       schema: {
         title: fields.slug({
           name: { label: '歌名' },
@@ -130,7 +130,7 @@ export default config({
       label: '项目',
       slugField: 'title',
       path: 'src/content/projects/*',
-      format: { type: 'json' },
+      format: { data: 'json' },
       schema: {
         title: fields.slug({
           name: { label: '项目名' },
@@ -161,7 +161,7 @@ export default config({
     siteConfig: singleton({
       label: '站点设置',
       path: 'src/siteConfig.json',
-      format: { type: 'json' },
+      format: { data: 'json' },
       schema: {
         title: fields.text({ label: '博客名', defaultValue: '我的博客' }),
         bio: fields.text({
