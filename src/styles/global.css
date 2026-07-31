@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* ============ 设计令牌 ============ */
 :root {
   --font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
@@ -29,21 +31,21 @@
 }
 
 html[data-theme="dark"] {
-  --text: #eaecf9;
-  --text-2: #a9aecb;
-  --text-3: #767d9e;
-  --accent: #a5b4fc;
-  --accent-2: #67e8f9;
-  --accent-soft: rgba(165, 180, 252, 0.14);
+  --text: #eceaff;
+  --text-2: #a9a4cc;
+  --text-3: #6f6a96;
+  --accent: #a78bfa;
+  --accent-2: #22d3ee;
+  --accent-soft: rgba(167, 139, 250, 0.16);
 
-  --glass-bg: rgba(22, 26, 48, 0.56);
-  --glass-bg-strong: rgba(22, 26, 48, 0.8);
+  --glass-bg: rgba(20, 14, 42, 0.56);
+  --glass-bg-strong: rgba(20, 14, 42, 0.8);
   --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.42);
-  --card-shadow-hover: 0 22px 60px rgba(0, 0, 0, 0.52);
+  --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --card-shadow-hover: 0 22px 60px rgba(0, 0, 0, 0.55);
 
-  --particle-c: rgba(165, 180, 252, 0.75);
-  --scene: linear-gradient(135deg, #0a0e24 0%, #161236 48%, #081b2b 100%);
+  --particle-c: rgba(196, 181, 253, 0.8);
+  --scene: linear-gradient(160deg, #07040f 0%, #150b2e 48%, #0b0f26 100%);
 }
 
 /* ============ 基础 ============ */
@@ -139,8 +141,8 @@ img {
 /* ============ 玻璃组件 ============ */
 .glass {
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(150%);
-  backdrop-filter: blur(var(--blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
@@ -231,23 +233,24 @@ img {
   position: absolute;
   inset: 0;
   background: var(--bg-img, none) center / cover no-repeat;
-  opacity: 0.35;
+  opacity: var(--bg-opacity, 0.35);
   transition: opacity 0.6s ease;
 }
 
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.55;
+  background: radial-gradient(circle at 35% 35%, var(--blob-c, rgba(124, 58, 237, 0.5)), transparent 65%);
+  opacity: var(--blob-o, 0.55);
   animation: blob-drift 24s ease-in-out infinite alternate;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .blob-1 {
   width: 540px;
   height: 540px;
-  background: #a78bfa;
+  --blob-c: rgba(124, 58, 237, 0.5);
   top: -150px;
   left: -130px;
 }
@@ -255,7 +258,7 @@ img {
 .blob-2 {
   width: 470px;
   height: 470px;
-  background: #5eead4;
+  --blob-c: rgba(217, 70, 239, 0.38);
   bottom: -170px;
   right: -110px;
   animation-duration: 28s;
@@ -265,10 +268,10 @@ img {
 .blob-3 {
   width: 390px;
   height: 390px;
-  background: #f9a8d4;
+  --blob-c: rgba(34, 211, 238, 0.34);
   top: 42%;
   left: 56%;
-  opacity: 0.38;
+  --blob-o: 0.42;
   animation-duration: 32s;
   animation-delay: -16s;
 }
@@ -314,11 +317,16 @@ img {
 
 @media (max-width: 640px) {
   .blob {
-    filter: blur(56px);
-    opacity: 0.42;
+    opacity: 0.34;
   }
   .particle:nth-child(odd) {
     display: none;
+  }
+  .glass,
+  .nav {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--glass-bg-strong);
   }
 }
 
@@ -915,6 +923,50 @@ html[data-theme="dark"] .icon-moon {
 
 .footer a:hover {
   color: var(--accent);
+}
+
+/* ============ 页面切换动画（View Transitions） ============ */
+::view-transition-old(root) {
+  animation: vt-fade-out 0.28s ease both;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 0.32s ease both;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* ============ 悬浮组件基础样式 ============ */
+.widget-layer {
+  position: fixed;
+  z-index: 80;
+}
+
+.widget-glass {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 /* ============ 无障碍 ============ */

@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import MusicPageClient from '../components/music/MusicPageClient.tsx';
+import { assetPath } from '../lib/paths';
+
+const songs = (await getCollection('songs')).filter((song) => !song.data.draft);
+const songProps = songs.map((song) => ({
+  id: song.id,
+  title: song.data.title,
+  artist: song.data.artist,
+  playlist: song.data.playlist,
+  cover: song.data.cover ? assetPath(song.data.cover) : undefined,
+  audio: song.data.audio ? assetPath(song.data.audio) : undefined,
+  lyrics: song.data.lyrics ? assetPath(song.data.lyrics) : undefined,
+  rating: song.data.rating,
+  review: song.data.review,
+}));
+---
+
+<Base title="音乐" description="歌单、歌词与乐评">
+  <header class="page-header glass">
+    <h1>音乐</h1>
+    <p>几个歌单，几首喜欢的歌，和一些想说的话。</p>
+  </header>
+  <div style="margin-top:22px">
+    <MusicPageClient client:load songs={songProps} />
+  </div>
+</Base>

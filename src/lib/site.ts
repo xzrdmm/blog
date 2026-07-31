@@ -9,6 +9,10 @@ export interface SiteConfig {
     email: string;
   };
   themeColors: string[];
+  wallpaper: string;
+  wallpaperOpacity: string;
+  enableParticles: boolean;
+  enableAurora: boolean;
   bgImages: string[];
 }
 

@@ -21,4 +21,31 @@ const chatters = defineCollection({
   }),
 });
 
-export const collections = { posts, chatters };
+const songs = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/songs' }),
+  schema: z.object({
+    title: z.string(),
+    artist: z.string().default(''),
+    playlist: z.string().default(''),
+    cover: z.string().optional(),
+    audio: z.string().optional(),
+    lyrics: z.string().optional(),
+    rating: z.string().default(''),
+    review: z.string().default(''),
+    draft: z.boolean().default(false),
+  }),
+});
+
+const projects = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/projects' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().default(''),
+    cover: z.string().optional(),
+    link: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { posts, chatters, songs, projects };

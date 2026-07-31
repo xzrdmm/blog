@@ -2,50 +2,66 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import ProfileCard from '../components/ProfileCard.astro';
-import PostCard from '../components/PostCard.astro';
 import ChatterCard from '../components/ChatterCard.astro';
 import Carousel from '../components/Carousel.astro';
+import MusicPlayer from '../components/music/MusicPlayer.tsx';
+import HomeMasonry from '../components/home/HomeMasonry.tsx';
 import { filterPublished, sortByDateDesc } from '../lib/posts';
 import { assetPath } from '../lib/paths';
-import { formatDate } from '../lib/format';
 import { makeExcerpt } from '../lib/content';
 
 const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
 const chatters = sortByDateDesc(await getCollection('chatters'));
-const [featured, ...rest] = posts;
+const songs = (await getCollection('songs')).filter((song) => !song.data.draft);
+const projects = (await getCollection('projects')).filter((project) => !project.data.draft);
 const base = import.meta.env.BASE_URL;
+
+const songProps = songs.map((song) => ({
+  id: song.id,
+  title: song.data.title,
+  artist: song.data.artist,
+  playlist: song.data.playlist,
+  cover: song.data.cover ? assetPath(song.data.cover) : undefined,
+  audio: song.data.audio ? assetPath(song.data.audio) : undefined,
+  lyrics: song.data.lyrics ? assetPath(song.data.lyrics) : undefined,
+}));
+
+const postProps = posts.map((post) => ({
+  id: post.id,
+  title: post.data.title,
+  date: post.data.date.toISOString(),
+  excerpt: post.data.excerpt || makeExcerpt(post.body ?? '', 96),
+  cover: post.data.cover ? assetPath(post.data.cover) : undefined,
+  tags: post.data.tags,
+}));
+
+const projectProps = projects.map((project) => ({
+  id: project.id,
+  title: project.data.title,
+  description: project.data.description,
+  cover: project.data.cover ? assetPath(project.data.cover) : undefined,
+  link: project.data.link || undefined,
+  tags: project.data.tags,
+}));
 ---
 
 <Base>
   <section class="hero">
     <ProfileCard />
-    {featured && (
-      <article class="featured-card glass">
-        <div class="cover">
-          {featured.data.cover && (
-            <img src={assetPath(featured.data.cover)} alt={featured.data.title} />
-          )}
-        </div>
-        <div>
-          <div class="meta">
-            <time datetime={featured.data.date.toISOString()}>
-              {formatDate(featured.data.date)}
-            </time>
-          </div>
-          <h1><a href={`${base}posts/${featured.id}/`}>{featured.data.title}</a></h1>
-          <p class="featured-excerpt">
-            {featured.data.excerpt || makeExcerpt(featured.body ?? '', 120)}
-          </p>
-          <div class="tag-list">
-            {featured.data.tags.map((tag) => (
-              <a class="tag-chip" href={`${base}tags/${encodeURIComponent(tag)}/`}>{tag}</a>
-            ))}
-          </div>
-          <a class="btn btn-primary" href={`${base}posts/${featured.id}/`}>阅读全文</a>
-        </div>
-      </article>
-    )}
+    <MusicPlayer client:load songs={songProps} />
   </section>
+
+  {posts.length > 0 || projects.length > 0 ? (
+    <section class="section">
+      <div class="section-head">
+        <h2>灵感与作品</h2>
+        <a class="section-more" href={`${base}archive/`}>归档 →</a>
+      </div>
+      <HomeMasonry client:load posts={postProps} projects={projectProps} base={base} />
+    </section>
+  ) : (
+    <p class="empty">还没有内容，去后台写第一篇吧。</p>
+  )}
 
   {chatters.length > 0 && (
     <section class="section">
@@ -58,20 +74,4 @@ const base = import.meta.env.BASE_URL;
       </Carousel>
     </section>
   )}
-
-  <section class="section">
-    <div class="section-head">
-      <h2>全部文章</h2>
-      <a class="section-more" href={`${base}archive/`}>归档 →</a>
-    </div>
-    {rest.length > 0 ? (
-      <div class="post-grid">
-        {rest.map((post) => <PostCard post={post} />)}
-      </div>
-    ) : featured ? (
-      <p class="empty">目前只有这一篇，快去写新文章吧。</p>
-    ) : (
-      <p class="empty">还没有文章。打开 <a href={`${base}keystatic/`} style="text-decoration:underline">管理后台</a> 写第一篇吧。</p>
-    )}
-  </section>
 </Base>

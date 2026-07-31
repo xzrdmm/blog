@@ -1,6 +1,12 @@
 ---
 import { siteConfig } from '../lib/site';
 import { assetPath } from '../lib/paths';
+import { ViewTransitions } from 'astro:transitions';
+import ScrollProgress from '../components/widgets/ScrollProgress.tsx';
+import BackToTop from '../components/widgets/BackToTop.tsx';
+import FloatingClock from '../components/widgets/FloatingClock.tsx';
+import MiniPlayer from '../components/music/MiniPlayer.tsx';
+import AudioHost from '../components/music/AudioHost.tsx';
 import '../styles/global.css';
 
 interface Props {
@@ -23,6 +29,7 @@ const isActive = (href: string) => {
 
 const navItems = [
   { href: `${base}`, label: '首页' },
+  { href: `${base}music`, label: '音乐' },
   { href: `${base}chatter`, label: '说说' },
   { href: `${base}tags`, label: '标签' },
   { href: `${base}archive`, label: '归档' },
@@ -38,7 +45,11 @@ const particles = Array.from({ length: 14 }, (_, i) => ({
 }));
 
 const year = new Date().getFullYear();
-const bgImage = siteConfig.bgImages[0];
+const bgImage = siteConfig.wallpaper || siteConfig.bgImages[0];
+const bgOpacity = Number(siteConfig.wallpaperOpacity) || 0.4;
+const bgStyle = bgImage
+  ? `--bg-img:url('${assetPath(bgImage)}');--bg-opacity:${bgOpacity}`
+  : undefined;
 ---
 
 <!doctype html>
@@ -55,6 +66,7 @@ const bgImage = siteConfig.bgImages[0];
     <meta property="og:type" content="website" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8edff" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0e24" />
+    <ViewTransitions />
     <script is:inline>
       (() => {
         try {
@@ -70,16 +82,21 @@ const bgImage = siteConfig.bgImages[0];
     </script>
   </head>
   <body>
-    <div class="bg-scene" style={bgImage ? `--bg-img:url('${bgImage}')` : undefined} aria-hidden="true">
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-      <div class="blob blob-3"></div>
-      {particles.map((p) => (
-        <span
-          class="particle"
-          style={`left:${p.left}%;--ps:${p.size}px;--pd:${p.duration}s;--pdelay:${p.delay}s;--po:${p.opacity};--sway:${p.sway}px`}
-        ></span>
-      ))}
+    <div class="bg-scene" style={bgStyle} aria-hidden="true">
+      {siteConfig.enableAurora && (
+        <>
+          <div class="blob blob-1"></div>
+          <div class="blob blob-2"></div>
+          <div class="blob blob-3"></div>
+        </>
+      )}
+      {siteConfig.enableParticles &&
+        particles.map((p) => (
+          <span
+            class="particle"
+            style={`left:${p.left}%;--ps:${p.size}px;--pd:${p.duration}s;--pdelay:${p.delay}s;--po:${p.opacity};--sway:${p.sway}px`}
+          ></span>
+        ))}
     </div>
 
     <header class="nav glass">
@@ -113,6 +130,12 @@ const bgImage = siteConfig.bgImages[0];
         {!import.meta.env.PROD && <>· <a href={`${base}keystatic`}>管理后台</a></>}
       </div>
     </footer>
+
+    <AudioHost client:load transition:persist />
+    <ScrollProgress client:load />
+    <BackToTop client:load />
+    <FloatingClock client:load />
+    <MiniPlayer client:load transition:persist />
 
     <script is:inline>
       const toggle = document.getElementById('theme-toggle');

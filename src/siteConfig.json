@@ -7,5 +7,9 @@
     "email": ""
   },
   "themeColors": ["#8b7cf6", "#67e8f9", "#f0abfc"],
+  "wallpaper": "",
+  "wallpaperOpacity": "0.4",
+  "enableParticles": true,
+  "enableAurora": true,
   "bgImages": []
 }

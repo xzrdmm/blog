@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import keystatic from '@keystatic/astro';
+import tailwindcss from '@tailwindcss/vite';
 
 // Keystatic 后台（/keystatic 与 /api/keystatic）依赖服务端路由，
 // 只在开发环境启用；生产构建保持纯静态，可直接部署到 GitHub Pages。
@@ -15,6 +16,9 @@ export default defineConfig({
   // 生产构建保持 /blog/ 以匹配 GitHub Pages 项目站点。
   base: isProduction ? '/blog/' : '/',
   integrations: [react(), ...(isProduction ? [] : [keystatic()])],
+  vite: {
+    plugins: [tailwindcss()],
+  },
   markdown: {
     shikiConfig: {
       theme: 'github-dark',

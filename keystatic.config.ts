@@ -70,6 +70,92 @@ export default config({
         }),
       },
     }),
+    songs: collection({
+      label: '歌曲',
+      slugField: 'title',
+      path: 'src/content/songs/*',
+      format: { type: 'json' },
+      schema: {
+        title: fields.slug({
+          name: { label: '歌名' },
+          description: '歌名，同时用于生成 URL。',
+        }),
+        artist: fields.text({ label: '歌手/艺术家' }),
+        playlist: fields.text({
+          label: '歌单/风格',
+          description: '例如：电子、日语、纯音乐……同名歌曲会自动归入同一个歌单。',
+        }),
+        cover: fields.image({
+          label: '封面',
+          directory: 'public/music/covers',
+          publicPath: '/music/covers',
+        }),
+        audio: fields.file({
+          label: '音频文件',
+          directory: 'public/music/audio',
+          publicPath: '/music/audio',
+          description: '建议 mp3/m4a/ogg，单文件不超过 100MB（GitHub 限制）。',
+        }),
+        lyrics: fields.file({
+          label: '歌词字幕',
+          directory: 'public/music/lyrics',
+          publicPath: '/music/lyrics',
+          description: '推荐 .lrc（逐行同步），也支持纯文本 .txt（静态展示）。',
+        }),
+        rating: fields.select({
+          label: '评分',
+          options: [
+            { label: '未评分', value: '' },
+            { label: '1 星', value: '1' },
+            { label: '2 星', value: '2' },
+            { label: '3 星', value: '3' },
+            { label: '4 星', value: '4' },
+            { label: '5 星', value: '5' },
+          ],
+          defaultValue: '',
+        }),
+        draft: fields.checkbox({
+          label: '草稿',
+          defaultValue: false,
+          description: '开启后不会出现在音乐页。',
+        }),
+        review: fields.text({
+          label: '乐评',
+          multiline: true,
+          description: '你对这首歌的短评。',
+        }),
+      },
+    }),
+    projects: collection({
+      label: '项目',
+      slugField: 'title',
+      path: 'src/content/projects/*',
+      format: { type: 'json' },
+      schema: {
+        title: fields.slug({
+          name: { label: '项目名' },
+          description: '项目名称，同时用于生成 URL。',
+        }),
+        description: fields.text({
+          label: '简介',
+          multiline: true,
+        }),
+        cover: fields.image({
+          label: '封面',
+          directory: 'public/images/projects',
+          publicPath: '/images/projects',
+        }),
+        link: fields.url({ label: '链接' }),
+        tags: fields.array(fields.text({ label: '标签' }), {
+          label: '标签',
+          itemLabel: (props) => props.value || '标签',
+        }),
+        draft: fields.checkbox({
+          label: '草稿',
+          defaultValue: false,
+        }),
+      },
+    }),
   },
   singletons: {
     siteConfig: singleton({
@@ -99,6 +185,34 @@ export default config({
           label: '主题色',
           description: '用于背景渐变，可填 2-4 个颜色值（hex/rgb）。',
           itemLabel: (props) => props.value || '颜色',
+        }),
+        wallpaper: fields.image({
+          label: '主页壁纸',
+          directory: 'public/images/wallpapers',
+          publicPath: '/images/wallpapers',
+          description: '可选：固定背景图片，叠加在光晕之上。',
+        }),
+        wallpaperOpacity: fields.select({
+          label: '壁纸不透明度',
+          options: [
+            { label: '10%', value: '0.1' },
+            { label: '25%', value: '0.25' },
+            { label: '40%', value: '0.4' },
+            { label: '60%', value: '0.6' },
+            { label: '80%', value: '0.8' },
+            { label: '100%', value: '1' },
+          ],
+          defaultValue: '0.4',
+        }),
+        enableParticles: fields.checkbox({
+          label: '粒子特效',
+          defaultValue: true,
+          description: '关闭后隐藏背景漂浮光点，滚动更省性能。',
+        }),
+        enableAurora: fields.checkbox({
+          label: '光晕特效',
+          defaultValue: true,
+          description: '关闭后隐藏背景流动光晕。',
         }),
         bgImages: fields.array(fields.image({ label: '背景图', directory: 'public/images/bg', publicPath: '/images/bg' }), {
           label: '背景图',

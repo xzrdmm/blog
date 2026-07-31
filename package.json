@@ -16,9 +16,12 @@
     "@astrojs/rss": "^4.0.0",
     "@keystatic/astro": "^5.2.0",
     "@keystatic/core": "^0.6.4",
+    "@tailwindcss/vite": "^4.3.3",
     "astro": "^5.0.0",
+    "framer-motion": "^12.43.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "vitest": "^3.0.0"
