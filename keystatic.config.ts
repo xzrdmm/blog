@@ -94,7 +94,7 @@ export default config({
           label: '音频文件',
           directory: 'public/music/audio',
           publicPath: '/music/audio',
-          description: '建议 mp3/m4a/ogg，单文件不超过 100MB（GitHub 限制）。',
+          description: '支持 mp3 / flac / m4a / ogg / wav，单文件不超过 100MB（GitHub 限制）。',
         }),
         lyrics: fields.file({
           label: '歌词字幕',
