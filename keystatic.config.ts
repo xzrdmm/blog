@@ -41,9 +41,10 @@ export default config({
           defaultValue: false,
           description: '开启后不会出现在列表与 RSS 中。',
         }),
-        content: fields.markdown({
+        content: fields.markdoc({
           label: '正文',
           description: '支持标准 Markdown、代码块与引用。',
+          extension: 'md',
         }),
       },
     }),
@@ -62,9 +63,10 @@ export default config({
           label: '日期',
           defaultValue: { kind: 'today' },
         }),
-        content: fields.markdown({
+        content: fields.markdoc({
           label: '内容',
           description: '短小的碎片记录。',
+          extension: 'md',
         }),
       },
     }),
