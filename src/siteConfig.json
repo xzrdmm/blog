@@ -1,13 +1,17 @@
 {
-  "title": "我的博客",
-  "bio": "记录代码与生活的碎片：写一点技术笔记，也写一点日常。",
-  "avatar": "/images/avatar.svg",
-  "social": {},
+  "title": "闲杂人等某某",
+  "bio": "咸涩的海风吹起了工业的尘埃，落在他的肩上，他的眉头忽然舒展开来",
+  "avatar": "/images/avatar.jpg",
+  "social": {
+    "github": "xzrdmm",
+    "email": "dn7730019138@163.com"
+  },
   "themeColors": [
     "#8b7cf6",
     "#67e8f9",
     "#f0abfc"
   ],
+  "wallpaper": "/images/wallpapers/wallpaper.jpg",
   "wallpaperOpacity": "0.4",
   "enableParticles": true,
   "enableAurora": true,
