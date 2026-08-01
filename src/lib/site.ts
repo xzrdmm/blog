@@ -13,6 +13,9 @@ export interface SiteConfig {
   wallpaperOpacity: string;
   enableParticles: boolean;
   enableAurora: boolean;
+  featuredPosts: string[];
+  featuredProjects: string[];
+  featuredSongs: string[];
   bgImages: string[];
 }
 

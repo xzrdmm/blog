@@ -1,0 +1,49 @@
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { formatClock, greeting } from '../../lib/clock';
+import MusicPlayer, { type SongItem } from '../music/MusicPlayer';
+
+interface Props {
+  songs: SongItem[];
+}
+
+export default function HeroPanel({ songs }: Props) {
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dateText = now
+    ? new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long',
+      }).format(now)
+    : '';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="glass flex flex-col gap-5 rounded-2xl p-5 sm:p-6"
+    >
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <div className="font-mono text-4xl font-bold tracking-tight text-[var(--text)] tabular-nums sm:text-5xl">
+            {now ? formatClock(now) : '--:--:--'}
+          </div>
+          <div className="mt-1 text-sm text-[var(--text-2)]">{now ? dateText : ''}</div>
+        </div>
+        <div className="shrink-0 text-sm font-medium text-[var(--accent)]">
+          {now ? greeting(now) : ''}
+        </div>
+      </div>
+      <MusicPlayer songs={songs} bare />
+    </motion.div>
+  );
+}

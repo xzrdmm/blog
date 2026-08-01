@@ -20,6 +20,7 @@ export interface MusicPlayerHandle {
 interface Props {
   songs: SongItem[];
   ref?: Ref<MusicPlayerHandle>;
+  bare?: boolean;
 }
 
 const toTrack = (song: SongItem): Track => ({
@@ -40,7 +41,7 @@ const formatTime = (seconds: number): string => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-export default function MusicPlayer({ songs, ref }: Props) {
+export default function MusicPlayer({ songs, ref, bare = false }: Props) {
   const activeLineRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState(audioStore.state);
   const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
@@ -134,7 +135,7 @@ export default function MusicPlayer({ songs, ref }: Props) {
 
   if (songs.length === 0) {
     return (
-      <section className="glass rounded-2xl p-5">
+      <section className={bare ? '' : 'glass rounded-2xl p-5'}>
         <div className="py-10 text-center text-sm text-[var(--text-3)]">
           音乐库还是空的——打开 <span className="text-[var(--accent)]">/keystatic</span> 在「歌曲」里上传音频和歌词吧。
         </div>
@@ -143,7 +144,7 @@ export default function MusicPlayer({ songs, ref }: Props) {
   }
 
   return (
-    <section className="glass flex flex-col gap-4 rounded-2xl p-5">
+    <section className={bare ? 'flex flex-col gap-4' : 'glass flex flex-col gap-4 rounded-2xl p-5'}>
       <div className="flex items-center gap-4">
         {current?.cover ? (
           <img src={current.cover} alt={current.title} className="h-20 w-20 shrink-0 rounded-xl object-cover shadow-lg" />

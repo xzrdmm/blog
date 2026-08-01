@@ -11,5 +11,8 @@
   "wallpaperOpacity": "0.4",
   "enableParticles": true,
   "enableAurora": true,
+  "featuredPosts": [],
+  "featuredProjects": [],
+  "featuredSongs": [],
   "bgImages": []
 }

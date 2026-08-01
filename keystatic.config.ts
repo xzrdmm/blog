@@ -1,6 +1,7 @@
 import { collection, config, fields, singleton } from '@keystatic/core';
 
 export default config({
+  locale: 'zh-CN',
   // 本地模式：在开发服务器上访问 /keystatic 直接读写本地文件。
   // 如需网页端远程编辑，请阅读 README「远程编辑」章节。
   storage: {
@@ -214,6 +215,30 @@ export default config({
           defaultValue: true,
           description: '关闭后隐藏背景流动光晕。',
         }),
+        featuredPosts: fields.array(
+          fields.relationship({ label: '选择文章', collection: 'posts' }),
+          {
+            label: '主页展示的文章',
+            description: '按顺序选择首页「灵感与作品」展示的文章；留空则自动取最新文章。',
+            itemLabel: (props) => props.value || '选择文章',
+          },
+        ),
+        featuredProjects: fields.array(
+          fields.relationship({ label: '选择项目', collection: 'projects' }),
+          {
+            label: '主页展示的项目',
+            description: '选择首页展示的项目（最多 2 个），会与文章均匀排列。',
+            itemLabel: (props) => props.value || '选择项目',
+          },
+        ),
+        featuredSongs: fields.array(
+          fields.relationship({ label: '选择歌曲', collection: 'songs' }),
+          {
+            label: '主页展示的歌曲',
+            description: '选择首页「音乐」板块展示的歌曲；留空则自动取全部已发布歌曲。',
+            itemLabel: (props) => props.value || '选择歌曲',
+          },
+        ),
         bgImages: fields.array(fields.image({ label: '背景图', directory: 'public/images/bg', publicPath: '/images/bg' }), {
           label: '背景图',
           description: '可选：缓慢轮换的固定背景图片。',
