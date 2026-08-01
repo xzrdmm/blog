@@ -19,6 +19,19 @@ const contentDir = resolve('src/content/songs');
 const sanitize = (value) =>
   value.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').trim() || 'untitled';
 
+const stripAudioExt = (value) =>
+  value.replace(/\.(mp3|flac|m4a|ogg|wav|opus|aac)$/i, '').trim() || value;
+
+const containerToExt = {
+  MPEG: '.mp3',
+  FLAC: '.flac',
+  OGG: '.ogg',
+  'MPEG-4': '.m4a',
+  MP4: '.m4a',
+  ADTS: '.aac',
+  WAVE: '.wav',
+};
+
 if (!existsSync(sourceDir)) {
   console.error(`找不到目录: ${sourceDir}`);
   console.error('用法: npm run music:import -- <音频文件夹> [歌单名]');
@@ -40,15 +53,18 @@ for (const file of files) {
   const full = join(sourceDir, file);
   if (!statSync(full).isFile()) continue;
 
-  let title = basename(file, extname(file)).trim();
+  let title = stripAudioExt(basename(file, extname(file)).trim());
   let artist = '';
+  let outputExt = extname(file).toLowerCase();
   try {
     const meta = await parseFile(full);
     title = meta.common.title?.trim() || title;
     artist = meta.common.artist?.trim() || '';
+    outputExt = containerToExt[meta.format.container] ?? outputExt;
   } catch (error) {
     results.push({ file, ok: false, error: `元数据解析失败，使用文件名：${error.message}` });
   }
+  title = stripAudioExt(title);
 
   let slug = sanitize(title);
   if (existingSlugs.has(slug)) {
@@ -57,7 +73,7 @@ for (const file of files) {
   }
   existingSlugs.add(slug);
 
-  let audioName = `${slug}${extname(file).toLowerCase()}`;
+  let audioName = `${slug}${outputExt}`;
   while (existingAudio.has(audioName)) {
     audioName = `${slug}-2${extname(file).toLowerCase()}`;
   }
