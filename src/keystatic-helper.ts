@@ -150,7 +150,6 @@ const target = ({
     posts: `/posts/${encodeURIComponent(slug)}/`,
     songs: '/music',
     chatters: '/chatter/',
-    projects: '/',
     friends: '/friends/',
     photos: '/photowall/',
   } as Record<string, string>)[collection] ?? '/';

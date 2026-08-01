@@ -139,35 +139,6 @@ export default config({
         }),
       },
     }),
-    projects: collection({
-      label: '项目',
-      slugField: 'title',
-      path: 'src/content/projects/*',
-      format: { data: 'json' },
-      schema: {
-        title: fields.slug({
-          name: { label: '项目名', description: '项目名称，同时用于生成 URL。' },
-        }),
-        description: fields.text({
-          label: '简介',
-          multiline: true,
-        }),
-        cover: fields.image({
-          label: '封面',
-          directory: 'public/images/projects',
-          publicPath: '/images/projects',
-        }),
-        link: fields.url({ label: '链接' }),
-        tags: fields.array(fields.text({ label: '标签' }), {
-          label: '标签',
-          itemLabel: (props) => props.value || '标签',
-        }),
-        draft: fields.checkbox({
-          label: '草稿',
-          defaultValue: false,
-        }),
-      },
-    }),
     friends: collection({
       label: '友链',
       slugField: 'name',
@@ -282,14 +253,6 @@ export default config({
             label: '主页展示的文章',
             description: '按顺序选择首页「灵感与作品」展示的文章；留空则自动取最新文章。',
             itemLabel: (props) => props.value || '选择文章',
-          },
-        ),
-        featuredProjects: fields.array(
-          fields.relationship({ label: '选择项目', collection: 'projects' }),
-          {
-            label: '主页展示的项目',
-            description: '选择首页展示的项目（最多 2 个），会与文章均匀排列。',
-            itemLabel: (props) => props.value || '选择项目',
           },
         ),
         featuredSongs: fields.array(

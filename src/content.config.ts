@@ -39,18 +39,6 @@ const songs = defineCollection({
   }),
 });
 
-const projects = defineCollection({
-  loader: glob({ pattern: '**/*.json', base: './src/content/projects' }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string().default(''),
-    cover: z.string().optional(),
-    link: z.string().optional(),
-    tags: z.array(z.string()).default([]),
-    draft: z.boolean().default(false),
-  }),
-});
-
 const friends = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/friends' }),
   schema: z.object({
@@ -72,4 +60,4 @@ const photos = defineCollection({
   }),
 });
 
-export const collections = { posts, chatters, songs, projects, friends, photos };
+export const collections = { posts, chatters, songs, friends, photos };

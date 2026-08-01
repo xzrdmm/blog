@@ -10,9 +10,7 @@ import HomeMasonry from '../components/home/HomeMasonry.tsx';
 import { filterPublished, sortByDateDesc, sortPosts } from '../lib/posts';
 import {
   curateFeaturedPosts,
-  curateFeaturedProjects,
   curateFeaturedSongs,
-  interleaveMasonry,
 } from '../lib/homepage';
 import { assetPath } from '../lib/paths';
 import { makeExcerpt } from '../lib/content';
@@ -23,7 +21,6 @@ const chatters = sortByDateDesc(
   (await getCollection('chatters')).filter((chatter) => !chatter.data.draft),
 );
 const songs = (await getCollection('songs')).filter((song) => !song.data.draft);
-const projects = (await getCollection('projects')).filter((project) => !project.data.draft);
 const base = import.meta.env.BASE_URL;
 
 // 主页歌单：全部已发布歌曲用于播放器；精选歌曲用于音乐板块
@@ -52,9 +49,8 @@ const musicSectionSongs = featuredSongs.map((song) => ({
   review: song.data.review,
 }));
 
-// 灵感与作品：后台可配置展示哪些文章/项目，默认取最新；文章与项目均匀交错（共 4-6 个）
-const postItems = curateFeaturedPosts(posts, siteConfig.featuredPosts, 4).map((post) => ({
-  kind: 'post' as const,
+// 灵感与作品：后台可配置展示哪些文章，默认取最新（最多 6 篇）
+const postItems = curateFeaturedPosts(posts, siteConfig.featuredPosts, 6).map((post) => ({
   id: post.id,
   title: post.data.title,
   date: post.data.date.toISOString(),
@@ -62,16 +58,6 @@ const postItems = curateFeaturedPosts(posts, siteConfig.featuredPosts, 4).map((p
   cover: post.data.cover ? assetPath(post.data.cover) : undefined,
   tags: post.data.tags,
 }));
-const projectItems = curateFeaturedProjects(projects, siteConfig.featuredProjects, 2).map((project) => ({
-  kind: 'project' as const,
-  id: project.id,
-  title: project.data.title,
-  description: project.data.description,
-  cover: project.data.cover ? assetPath(project.data.cover) : undefined,
-  link: project.data.link || undefined,
-  tags: project.data.tags,
-}));
-const masonryItems = interleaveMasonry(postItems, projectItems, 6);
 ---
 
 <Base>
@@ -85,8 +71,8 @@ const masonryItems = interleaveMasonry(postItems, projectItems, 6);
         <h2>灵感与作品</h2>
         <a class="section-more" href={`${base}tags/`}>文章 →</a>
       </div>
-    {masonryItems.length > 0 ? (
-      <HomeMasonry client:load items={masonryItems} base={base} />
+    {postItems.length > 0 ? (
+      <HomeMasonry client:load posts={postItems} base={base} />
     ) : (
       <p class="empty">还没有内容，去后台写第一篇吧。</p>
     )}

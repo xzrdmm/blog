@@ -14,7 +14,6 @@ export interface SiteConfig {
   enableParticles: boolean;
   enableAurora: boolean;
   featuredPosts: string[];
-  featuredProjects: string[];
   featuredSongs: string[];
   goatcounterSite: string;
   bgImages: string[];
@@ -34,7 +33,6 @@ export const siteConfig: SiteConfig = {
   enableParticles: siteConfigJson.enableParticles ?? true,
   enableAurora: siteConfigJson.enableAurora ?? true,
   featuredPosts: siteConfigJson.featuredPosts ?? [],
-  featuredProjects: siteConfigJson.featuredProjects ?? [],
   featuredSongs: siteConfigJson.featuredSongs ?? [],
   goatcounterSite: siteConfigJson.goatcounterSite ?? '',
   bgImages: siteConfigJson.bgImages ?? [],
