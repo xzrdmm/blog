@@ -216,7 +216,8 @@ export default config({
   singletons: {
     siteConfig: singleton({
       label: '站点设置',
-      path: 'src/siteConfig.json',
+      // 注意：不能带 .json 扩展名，否则 Keystatic 会追加扩展名写成 siteConfig.json.json
+      path: 'src/siteConfig',
       format: { data: 'json' },
       schema: {
         title: fields.text({ label: '博客名', defaultValue: '我的博客' }),
