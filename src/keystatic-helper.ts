@@ -94,6 +94,8 @@ async function autofillFromAudio(download: HTMLAnchorElement | HTMLButtonElement
     const href = download instanceof HTMLAnchorElement ? download.href : '';
     if (!href) return;
     const blob = await (await fetch(href)).blob();
+    // 超大文件跳过元数据解析，避免内存压力导致页面卡死
+    if (blob.size > 100 * 1024 * 1024) return;
     const meta = await parseBlob(blob, { mimeType: blob.type || 'audio/mpeg' });
     const title = meta.common.title?.trim();
     const artist = meta.common.artist?.trim();
@@ -167,7 +169,15 @@ function enhanceField(button: HTMLButtonElement): void {
           audio.preload = 'none';
           const href = download instanceof HTMLAnchorElement ? download.href : '';
           if (href) {
-            audio.src = href;
+            // 大文件不插入试听控件，避免额外内存占用
+            fetch(href)
+              .then((res) => res.blob())
+              .then((blob) => {
+                if (blob.size <= 60 * 1024 * 1024) {
+                  audio.src = href;
+                }
+              })
+              .catch(() => {});
             group.appendChild(audio);
           }
         }
@@ -187,6 +197,7 @@ function enhanceField(button: HTMLButtonElement): void {
 
 function init(): void {
   injectStyles();
+  let scanTimer: number | undefined;
   const scan = () => {
     for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
       if (button.textContent?.trim() === 'Choose file') {
@@ -194,8 +205,12 @@ function init(): void {
       }
     }
   };
+  const scheduleScan = () => {
+    window.clearTimeout(scanTimer);
+    scanTimer = window.setTimeout(scan, 400);
+  };
   scan();
-  const bodyObserver = new MutationObserver(scan);
+  const bodyObserver = new MutationObserver(scheduleScan);
   bodyObserver.observe(document.body, { childList: true, subtree: true });
 }
 
