@@ -79,10 +79,10 @@ const masonryItems = interleaveMasonry(postItems, projectItems, 6);
   </section>
 
   <section class="section">
-    <div class="section-head">
-      <h2>灵感与作品</h2>
-      <a class="section-more" href={`${base}archive/`}>归档 →</a>
-    </div>
+      <div class="section-head">
+        <h2>灵感与作品</h2>
+        <a class="section-more" href={`${base}tags/`}>文章 →</a>
+      </div>
     {masonryItems.length > 0 ? (
       <HomeMasonry client:load items={masonryItems} base={base} />
     ) : (
