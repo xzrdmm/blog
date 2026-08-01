@@ -7,7 +7,6 @@
 import { parseBlob } from 'music-metadata';
 
 const FIELD_LABELS = new Set(['封面', '音频文件', '歌词字幕']);
-const TEXT_LABELS = ['歌名', '歌手/艺术家', '歌单/风格'];
 // 超过该大小的文件不让 Keystatic 读取（读取大文件会导致页面卡死/崩溃）
 const MAX_ADMIN_FILE_SIZE = 15 * 1024 * 1024;
 

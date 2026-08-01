@@ -74,8 +74,10 @@ for (const file of files) {
   existingSlugs.add(slug);
 
   let audioName = `${slug}${outputExt}`;
+  let suffix = 2;
   while (existingAudio.has(audioName)) {
-    audioName = `${slug}-2${extname(file).toLowerCase()}`;
+    audioName = `${slug}-${suffix}${outputExt}`;
+    suffix++;
   }
   existingAudio.add(audioName);
 

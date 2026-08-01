@@ -43,6 +43,7 @@ const musicSectionSongs = featuredSongs.map((song) => ({
   playlist: song.data.playlist,
   cover: song.data.cover ? assetPath(song.data.cover) : undefined,
   audio: song.data.audio ? assetPath(song.data.audio) : undefined,
+  lyrics: song.data.lyrics ? assetPath(song.data.lyrics) : undefined,
   rating: song.data.rating,
   review: song.data.review,
 }));

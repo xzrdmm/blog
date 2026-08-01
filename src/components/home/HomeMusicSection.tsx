@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { audioStore, type Track } from '../../lib/audio-store';
+import { audioStore } from '../../lib/audio-store';
+import { buildTrack } from '../../lib/track';
 
 export interface MusicCardItem {
   id: string;
@@ -8,6 +9,7 @@ export interface MusicCardItem {
   playlist: string;
   cover?: string;
   audio?: string;
+  lyrics?: string;
   rating: string;
   review: string;
 }
@@ -15,15 +17,6 @@ export interface MusicCardItem {
 interface Props {
   songs: MusicCardItem[];
 }
-
-const toTrack = (song: MusicCardItem): Track => ({
-  id: song.id,
-  src: song.audio ? `${song.audio}?v=${song.id}` : '',
-  title: song.title,
-  artist: song.artist,
-  cover: song.cover,
-  playlist: song.playlist,
-});
 
 export default function HomeMusicSection({ songs }: Props) {
   return (
@@ -35,7 +28,7 @@ export default function HomeMusicSection({ songs }: Props) {
             key={song.id}
             type="button"
             onClick={() => {
-              if (song.audio) audioStore.play(toTrack(song));
+              if (song.audio) audioStore.play(buildTrack(song));
             }}
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}

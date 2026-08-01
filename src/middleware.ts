@@ -18,8 +18,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     ? html.replace('</body>', `${injected}\n</body>`)
     : `${html}\n${injected}`;
 
+  const headers = new Headers(response.headers);
+  headers.delete('content-length');
+
   return new Response(nextHtml, {
     status: response.status,
-    headers: response.headers,
+    headers,
   });
 });

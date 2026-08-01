@@ -24,6 +24,38 @@ describe('AudioStore', () => {
     expect(store.state.playing).toBe(false);
   });
 
+  it('play resets currentTime and duration', () => {
+    const store = new AudioStore();
+    store.play(track);
+    store.setTime(50);
+    store.setDuration(180);
+    store.play({ ...track, src: '/music/b.mp3' });
+    expect(store.state.currentTime).toBe(0);
+    expect(store.state.duration).toBe(0);
+  });
+
+  it('select resets currentTime and duration', () => {
+    const store = new AudioStore();
+    store.play(track);
+    store.setTime(50);
+    store.setDuration(180);
+    store.select({ ...track, src: '/music/b.mp3' });
+    expect(store.state.currentTime).toBe(0);
+    expect(store.state.duration).toBe(0);
+  });
+
+  it('fail marks playing false with error and does not notify ended listeners', () => {
+    const store = new AudioStore();
+    let endedCount = 0;
+    store.onEnded(() => endedCount++);
+    store.play(track);
+    store.fail('播放失败');
+    expect(store.state.playing).toBe(false);
+    expect(store.state.error).toBe('播放失败');
+    expect(store.state.loading).toBe(false);
+    expect(endedCount).toBe(0);
+  });
+
   it('toggle flips playing when a track exists', () => {
     const store = new AudioStore();
     store.play(track);

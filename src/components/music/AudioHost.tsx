@@ -19,10 +19,10 @@ export default function AudioHost() {
       audio.src = src;
       audio.load();
     }
-    if (state.playing) {
-      void audio.play().catch(() => {
-        audioStore.setError('音频播放失败，请检查文件是否存在');
-      });
+      if (state.playing) {
+        void audio.play().catch(() => {
+          audioStore.fail('音频播放失败，请检查文件是否存在');
+        });
     } else {
       audio.pause();
     }
@@ -50,8 +50,7 @@ export default function AudioHost() {
       }}
       onEnded={() => audioStore.ended()}
       onError={() => {
-        audioStore.setError('音频文件加载失败');
-        audioStore.setLoading(false);
+        audioStore.fail('音频文件加载失败');
       }}
       onPlay={() => audioStore.setError('')}
       preload="metadata"

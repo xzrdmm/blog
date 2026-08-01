@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { type Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { audioStore, type Track } from '../../lib/audio-store';
+import { audioStore } from '../../lib/audio-store';
 import { currentLineIndex, parseLrc, type LyricLine } from '../../lib/lrc';
+import { buildTrack } from '../../lib/track';
 
 export interface SongItem {
   id: string;
@@ -23,17 +24,6 @@ interface Props {
   bare?: boolean;
 }
 
-const toTrack = (song: SongItem): Track => ({
-  id: song.id,
-  // 加缓存破坏参数，避免下载管理器按 URL 拦截/缓存音频流
-  src: song.audio ? `${song.audio}?v=${song.id}` : '',
-  title: song.title,
-  artist: song.artist,
-  cover: song.cover,
-  playlist: song.playlist,
-  lyricsSrc: song.lyrics,
-});
-
 const formatTime = (seconds: number): string => {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
   const m = Math.floor(safe / 60);
@@ -53,13 +43,13 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     const current = audioStore.state.track;
     if (current && songs.some((song) => song.id === current.id)) return;
     const first = songs.find((song) => song.audio);
-    if (first) audioStore.select(toTrack(first));
+    if (first) audioStore.select(buildTrack(first));
   }, [songs]);
 
   const playById = useCallback(
     (id: string) => {
       const song = songs.find((item) => item.id === id);
-      if (song?.audio) audioStore.play(toTrack(song));
+      if (song?.audio) audioStore.play(buildTrack(song));
     },
     [songs],
   );
@@ -72,7 +62,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
   const playAt = useCallback(
     (index: number) => {
       const song = songs[index];
-      if (song?.audio) audioStore.play(toTrack(song));
+      if (song?.audio) audioStore.play(buildTrack(song));
     },
     [songs],
   );

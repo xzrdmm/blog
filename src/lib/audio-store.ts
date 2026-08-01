@@ -35,11 +35,11 @@ export class AudioStore {
   };
 
   play(track: Track): void {
-    this.setState({ track, playing: true, error: '', loading: true });
+    this.setState({ track, playing: true, error: '', loading: true, currentTime: 0, duration: 0 });
   }
 
   select(track: Track): void {
-    this.setState({ track, playing: false, error: '' });
+    this.setState({ track, playing: false, error: '', currentTime: 0, duration: 0 });
   }
 
   toggle(): void {
@@ -71,6 +71,10 @@ export class AudioStore {
 
   setError(error: string): void {
     this.setState({ error });
+  }
+
+  fail(error: string): void {
+    this.setState({ playing: false, loading: false, error });
   }
 
   setLoading(loading: boolean): void {
