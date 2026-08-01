@@ -8,6 +8,12 @@ import { parseBlob } from 'music-metadata';
 
 const FIELD_LABELS = new Set(['封面', '音频文件', '歌词字幕']);
 const TEXT_LABELS = ['歌名', '歌手/艺术家', '歌单/风格'];
+// 超过该大小的文件不让 Keystatic 读取（读取大文件会导致页面卡死/崩溃）
+const MAX_ADMIN_FILE_SIZE = 15 * 1024 * 1024;
+const flags = () => window as unknown as {
+  __KS_HELPER_DISABLED?: boolean;
+  __KS_NO_AUTOFILL?: boolean;
+};
 
 function injectStyles(): void {
   if (document.getElementById('ks-helper-style')) return;
@@ -39,14 +45,53 @@ function injectStyles(): void {
       object-fit: cover;
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
-    .ks-audio {
-      display: block;
-      margin-top: 8px;
-      max-width: 280px;
-      height: 36px;
+    .ks-toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      max-width: 560px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(30, 20, 60, 0.95);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      color: #e9e4ff;
+      font-size: 13px;
+      line-height: 1.6;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
   `;
   document.head.appendChild(style);
+}
+
+function showToast(message: string): void {
+  const existing = document.getElementById('ks-toast');
+  existing?.remove();
+  const div = document.createElement('div');
+  div.id = 'ks-toast';
+  div.className = 'ks-toast';
+  div.textContent = message;
+  document.body.appendChild(div);
+  window.setTimeout(() => div.remove(), 10000);
+}
+
+function installLargeFileGuard(): void {
+  document.addEventListener(
+    'change',
+    (event) => {
+      const input = event.target as HTMLInputElement | null;
+      const file = input?.files?.[0];
+      if (input?.type === 'file' && file && file.size > MAX_ADMIN_FILE_SIZE) {
+        event.stopImmediatePropagation();
+        showToast(
+          `「${file.name}」(${(file.size / 1024 / 1024).toFixed(1)}MB) 超过后台上传上限 15MB，` +
+            '为避免页面崩溃，请改用批量导入：npm run music:import -- <文件夹> <歌单名>',
+        );
+      }
+    },
+    true,
+  );
 }
 
 function findFieldLabel(button: HTMLButtonElement): string | null {
@@ -93,7 +138,7 @@ async function autofillFromAudio(download: HTMLAnchorElement | HTMLButtonElement
   try {
     const href = download instanceof HTMLAnchorElement ? download.href : '';
     if (!href) return;
-    const blob = await (await fetch(href)).blob();
+    const blob = await (await fetch(href, { signal: AbortSignal.timeout(8000) })).blob();
     // 超大文件跳过元数据解析，避免内存压力导致页面卡死
     if (blob.size > 100 * 1024 * 1024) return;
     const meta = await parseBlob(blob, { mimeType: blob.type || 'audio/mpeg' });
@@ -160,27 +205,8 @@ function enhanceField(button: HTMLButtonElement): void {
         }
       }
 
-      if (label === '音频文件') {
+      if (label === '音频文件' && !flags().__KS_NO_AUTOFILL) {
         void autofillFromAudio(download);
-        if (!group.querySelector('.ks-audio')) {
-          const audio = document.createElement('audio');
-          audio.className = 'ks-audio';
-          audio.controls = true;
-          audio.preload = 'none';
-          const href = download instanceof HTMLAnchorElement ? download.href : '';
-          if (href) {
-            // 大文件不插入试听控件，避免额外内存占用
-            fetch(href)
-              .then((res) => res.blob())
-              .then((blob) => {
-                if (blob.size <= 60 * 1024 * 1024) {
-                  audio.src = href;
-                }
-              })
-              .catch(() => {});
-            group.appendChild(audio);
-          }
-        }
       }
     } else if (label === '封面' && !chip) {
       const el = document.createElement('span');
@@ -196,7 +222,9 @@ function enhanceField(button: HTMLButtonElement): void {
 }
 
 function init(): void {
+  if (flags().__KS_HELPER_DISABLED) return;
   injectStyles();
+  installLargeFileGuard();
   let scanTimer: number | undefined;
   const scan = () => {
     for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
