@@ -3,6 +3,7 @@ import { audioStore } from '../../lib/audio-store';
 
 export default function AudioHost() {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const lastSrcRef = useRef<string | null>(null);
   const [state, setState] = useState(audioStore.state);
 
   useEffect(() => audioStore.subscribe(() => setState(audioStore.state)), []);
@@ -12,7 +13,8 @@ export default function AudioHost() {
     if (!audio || !state.track) return;
     const src = state.track.src;
     if (!src) return;
-    if (audio.src !== src) {
+    if (lastSrcRef.current !== src) {
+      lastSrcRef.current = src;
       audioStore.setLoading(true);
       audio.src = src;
       audio.load();
