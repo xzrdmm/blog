@@ -597,7 +597,11 @@ html[data-theme="dark"] .icon-moon {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding: 4px 4px 16px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
 }
 
 .rail > * {
