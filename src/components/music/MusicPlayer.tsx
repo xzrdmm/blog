@@ -76,7 +76,20 @@ export default function MusicPlayer({ songs, ref }: Props) {
     [songs],
   );
 
+  const playPrev = useCallback(() => {
+    if (currentIndex < 0) return;
+    playAt((currentIndex - 1 + songs.length) % songs.length);
+  }, [currentIndex, songs, playAt]);
+
+  const playNext = useCallback(() => {
+    if (currentIndex < 0) return;
+    playAt((currentIndex + 1) % songs.length);
+  }, [currentIndex, songs, playAt]);
+
   const togglePlay = useCallback(() => audioStore.toggle(), []);
+
+  // 一首播完后自动切到下一首（循环）
+  useEffect(() => audioStore.onEnded(() => playNext()), [playNext]);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,8 +162,8 @@ export default function MusicPlayer({ songs, ref }: Props) {
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            onClick={() => playAt(currentIndex - 1)}
-            disabled={currentIndex <= 0}
+            onClick={playPrev}
+            disabled={currentIndex < 0}
             aria-label="上一首"
             className="widget-glass flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-2)] transition hover:-translate-y-0.5 hover:text-[var(--text)] disabled:pointer-events-none disabled:opacity-35"
           >
@@ -178,8 +191,8 @@ export default function MusicPlayer({ songs, ref }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => playAt(currentIndex + 1)}
-            disabled={currentIndex < 0 || currentIndex >= songs.length - 1}
+            onClick={playNext}
+            disabled={currentIndex < 0}
             aria-label="下一首"
             className="widget-glass flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-2)] transition hover:-translate-y-0.5 hover:text-[var(--text)] disabled:pointer-events-none disabled:opacity-35"
           >

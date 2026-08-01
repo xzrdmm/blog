@@ -22,6 +22,7 @@ type Listener = () => void;
 
 export class AudioStore {
   private listeners = new Set<Listener>();
+  private endedListeners = new Set<() => void>();
 
   state: AudioState = {
     track: null,
@@ -49,6 +50,7 @@ export class AudioStore {
 
   ended(): void {
     this.setState({ playing: false });
+    this.endedListeners.forEach((listener) => listener());
   }
 
   stop(): void {
@@ -79,6 +81,13 @@ export class AudioStore {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  onEnded(listener: () => void): () => void {
+    this.endedListeners.add(listener);
+    return () => {
+      this.endedListeners.delete(listener);
     };
   }
 

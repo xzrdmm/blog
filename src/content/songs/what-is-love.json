@@ -4,6 +4,6 @@
   "playlist": "电子",
   "audio": "/music/audio/what-is-love/audio.mp3",
   "rating": "5",
-  "draft": true,
+  "draft": false,
   "review": "梗曲"
 }

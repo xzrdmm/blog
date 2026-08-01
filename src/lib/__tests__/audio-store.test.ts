@@ -47,6 +47,17 @@ describe('AudioStore', () => {
     expect(store.state.track).toEqual(track);
   });
 
+  it('notifies ended listeners and supports unsubscribe', () => {
+    const store = new AudioStore();
+    let count = 0;
+    const off = store.onEnded(() => count++);
+    store.ended();
+    expect(count).toBe(1);
+    off();
+    store.ended();
+    expect(count).toBe(1);
+  });
+
   it('stop clears the track and pauses', () => {
     const store = new AudioStore();
     store.play(track);
