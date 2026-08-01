@@ -216,16 +216,16 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
   }
 
   return (
-    <section className={bare ? 'flex flex-col gap-4' : 'glass flex flex-col gap-4 rounded-2xl p-5'}>
+    <section className={bare ? 'flex flex-col gap-3' : 'glass flex flex-col gap-3 rounded-2xl p-4'}>
       <div className="flex items-center gap-4">
         {current?.cover ? (
-          <img src={current.cover} alt={current.title} className="h-20 w-20 shrink-0 rounded-xl object-cover shadow-lg" />
+          <img src={current.cover} alt={current.title} className="h-16 w-16 shrink-0 rounded-xl object-cover shadow-lg" />
         ) : (
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/60 to-cyan-400/50 text-2xl text-white">♪</div>
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/60 to-cyan-400/50 text-xl text-white">♪</div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-lg font-semibold text-[var(--text)]">{current ? current.title : '选择一首歌'}</div>
-          <div className="truncate text-sm text-[var(--text-2)]">{current ? current.artist || '未知歌手' : '从下方列表开始播放'}</div>
+          <div className="truncate text-base font-semibold text-[var(--text)]">{current ? current.title : '选择一首歌'}</div>
+          <div className="truncate text-xs text-[var(--text-2)]">{current ? current.artist || '未知歌手' : '从下方列表开始播放'}</div>
           {current && (
             <span className="mt-1.5 inline-block rounded-full bg-[var(--accent-soft)] px-2.5 py-0.5 text-xs text-[var(--accent)]">
               {current.playlist || '未分类'}
@@ -238,7 +238,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
             onClick={playPrev}
             disabled={currentIndex < 0}
             aria-label="上一首"
-            className="widget-glass flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-2)] transition hover:-translate-y-0.5 hover:text-[var(--text)] disabled:pointer-events-none disabled:opacity-35"
+            className="widget-glass flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-2)] transition hover:-translate-y-0.5 hover:text-[var(--text)] disabled:pointer-events-none disabled:opacity-35"
           >
             <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
               <path d="M6 5h2v14H6zM20 5v14L10 12z"></path>
@@ -249,7 +249,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
             onClick={togglePlay}
           disabled={!displayState.track}
           aria-label={displayState.playing ? '暂停' : '播放'}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-lg transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-40"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-lg transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-40"
           >
             {displayState.playing ? (
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
@@ -267,7 +267,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
             onClick={playNext}
             disabled={currentIndex < 0}
             aria-label="下一首"
-            className="widget-glass flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-2)] transition hover:-translate-y-0.5 hover:text-[var(--text)] disabled:pointer-events-none disabled:opacity-35"
+            className="widget-glass flex h-9 w-9 items-center justify-center rounded-full text-[var(--text-2)] transition hover:-translate-y-0.5 hover:text-[var(--text)] disabled:pointer-events-none disabled:opacity-35"
           >
             <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
               <path d="M16 5h2v14h-2zM4 5v14l10-7z"></path>
@@ -318,7 +318,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
       <div>
         <div className="mb-2 text-xs font-medium tracking-widest text-[var(--text-3)] uppercase">歌词</div>
         {lyrics && lyrics.length > 0 ? (
-          <div className="relative h-44 overflow-y-auto rounded-xl bg-black/25 px-4 py-3">
+          <div className="relative h-32 overflow-y-auto rounded-xl bg-black/25 px-4 py-2">
             {lyrics.map((line, i) => (
               <div
                 key={i}

@@ -78,18 +78,6 @@ const masonryItems = interleaveMasonry(postItems, projectItems, 6);
     <HeroPanel client:load songs={heroSongProps} />
   </section>
 
-  {chatters.length > 0 && (
-    <section class="section">
-      <div class="section-head">
-        <h2>最新说说</h2>
-        <a class="section-more" href={`${base}chatter/`}>查看全部 →</a>
-      </div>
-      <Carousel>
-        {chatters.map((chatter) => <ChatterCard chatter={chatter} />)}
-      </Carousel>
-    </section>
-  )}
-
   <section class="section">
     <div class="section-head">
       <h2>灵感与作品</h2>
@@ -101,6 +89,18 @@ const masonryItems = interleaveMasonry(postItems, projectItems, 6);
       <p class="empty">还没有内容，去后台写第一篇吧。</p>
     )}
   </section>
+
+  {chatters.length > 0 && (
+    <section class="section">
+      <div class="section-head">
+        <h2>最新说说</h2>
+        <a class="section-more" href={`${base}chatter/`}>查看全部 →</a>
+      </div>
+      <Carousel>
+        {chatters.map((chatter) => <ChatterCard chatter={chatter} />)}
+      </Carousel>
+    </section>
+  )}
 
   {musicSectionSongs.length > 0 && (
     <section class="section">

@@ -30,16 +30,16 @@ export default function HeroPanel({ songs }: Props) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: 'easeOut' }}
-      className="glass flex flex-col gap-5 rounded-2xl p-5 sm:p-6"
+      className="glass flex flex-col gap-4 rounded-2xl p-4 sm:p-5"
     >
       <div className="flex items-end justify-between gap-4">
         <div>
-          <div className="font-mono text-4xl font-bold tracking-tight text-[var(--text)] tabular-nums sm:text-5xl">
+          <div className="font-mono text-3xl font-bold tracking-tight text-[var(--text)] tabular-nums sm:text-4xl">
             {now ? formatClock(now) : '--:--:--'}
           </div>
-          <div className="mt-1 text-sm text-[var(--text-2)]">{now ? dateText : ''}</div>
+          <div className="mt-0.5 text-xs text-[var(--text-2)]">{now ? dateText : ''}</div>
         </div>
-        <div className="shrink-0 text-sm font-medium text-[var(--accent)]">
+        <div className="shrink-0 text-xs font-medium text-[var(--accent)]">
           {now ? greeting(now) : ''}
         </div>
       </div>

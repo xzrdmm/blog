@@ -422,7 +422,7 @@ html[data-theme="dark"] .icon-moon {
 .hero {
   display: grid;
   grid-template-columns: 300px 1fr;
-  gap: 20px;
+  gap: 16px;
   margin-top: 24px;
 }
 
@@ -437,7 +437,7 @@ html[data-theme="dark"] .icon-moon {
 }
 
 .profile-card {
-  padding: 26px 22px;
+  padding: 18px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -446,24 +446,24 @@ html[data-theme="dark"] .icon-moon {
 }
 
 .profile-avatar {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .profile-name {
-  font-size: 1.3rem;
-  margin-bottom: 4px;
+  font-size: 1.15rem;
+  margin-bottom: 2px;
 }
 
 .profile-bio {
   color: var(--text-2);
-  font-size: 0.9rem;
-  margin: 6px 0 14px;
+  font-size: 0.85rem;
+  margin: 4px 0 10px;
 }
 
 .profile-socials {
@@ -606,18 +606,18 @@ html[data-theme="dark"] .icon-moon {
 }
 
 .chatter-card {
-  width: min(320px, 82vw);
-  padding: 18px 20px;
+  width: min(350px, 86vw);
+  padding: 16px 18px;
 }
 
 .chatter-card .meta {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   margin-bottom: 6px;
 }
 
 .chatter-card .content {
   color: var(--text);
-  font-size: 0.94rem;
+  font-size: 1rem;
 }
 
 .chatter-card .content p {
