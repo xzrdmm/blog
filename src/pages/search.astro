@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import SearchClient from '../components/SearchClient.tsx';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="搜索" description="站内搜索">
+  <header class="page-header glass">
+    <h1>搜索</h1>
+    <p>搜索文章与说说，按 <kbd>/</kbd> 快速聚焦。</p>
+  </header>
+  <div style="margin-top:22px">
+    <SearchClient client:load indexUrl={`${base}search-index.json`} />
+  </div>
+</Base>

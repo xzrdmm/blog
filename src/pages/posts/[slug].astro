@@ -2,12 +2,17 @@
 import { getCollection, render } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
-import { filterPublished, getAdjacent, sortByDateDesc } from '../../lib/posts';
+import PostCard from '../../components/PostCard.astro';
+import { filterPublished, getAdjacent, sortPosts } from '../../lib/posts';
+import { getRelatedPosts } from '../../lib/related';
+import { estimateReadingTime } from '../../lib/reading';
+import { stripMarkdown } from '../../lib/content';
 import { formatDate } from '../../lib/format';
 import { assetPath } from '../../lib/paths';
+import { siteConfig } from '../../lib/site';
 
 export const getStaticPaths = (async () => {
-  const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+  const posts = sortPosts(filterPublished(await getCollection('posts')));
   return posts.map((post) => ({
     params: { slug: post.id },
     props: { post, posts },
@@ -15,17 +20,27 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { post, posts } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const { prev, next } = getAdjacent(post.id, posts);
+const related = getRelatedPosts(post.id, posts, 3);
 const base = import.meta.env.BASE_URL;
 const title = post.data.title;
+const readingMinutes = estimateReadingTime(post.body ?? '');
+const charCount = stripMarkdown(post.body ?? '').replace(/\s+/g, '').length;
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const absolute = (path: string) => new URL(assetPath(path), Astro.site).href;
 ---
 
-<Base title={title} description={post.data.excerpt || undefined}>
+<Base
+  title={title}
+  description={post.data.excerpt || undefined}
+  image={post.data.cover}
+>
   <article>
     <header class="post-header glass">
       <div class="meta">
         <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        {post.data.pinned && <span class="tag-chip">置顶</span>}
         {post.data.tags.length > 0 && (
           <div class="tag-list">
             {post.data.tags.map((tag) => (
@@ -36,6 +51,7 @@ const title = post.data.title;
       </div>
       <h1>{title}</h1>
       {post.data.excerpt && <p class="featured-excerpt">{post.data.excerpt}</p>}
+      <div class="meta" style="margin-top:10px">约 {readingMinutes} 分钟阅读 · {charCount} 字</div>
     </header>
 
     {post.data.cover && (
@@ -44,8 +60,26 @@ const title = post.data.title;
       </div>
     )}
 
+    {toc.length > 0 && (
+      <nav class="toc glass" aria-label="文章目录">
+        <div class="toc-title">目录</div>
+        <ul>
+          {toc.map((heading) => (
+            <li style={`padding-left:${(heading.depth - 2) * 14}px`}>
+              <a href={`#${heading.slug}`}>{heading.text}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
     <div class="prose glass">
       <Content />
+    </div>
+
+    <div class="share-row">
+      <button class="btn" id="share-btn" type="button">分享</button>
+      <button class="btn" id="copy-link-btn" type="button">复制链接</button>
     </div>
 
     <nav class="post-nav" aria-label="文章导航">
@@ -66,5 +100,46 @@ const title = post.data.title;
         <span></span>
       )}
     </nav>
+
+    {related.length > 0 && (
+      <section class="section">
+        <h2>相关文章</h2>
+        <div class="post-grid" style="margin-top:16px">
+          {related.map((item) => <PostCard post={item} />)}
+        </div>
+      </section>
+    )}
   </article>
+
+  <script type="application/ld+json" is:inline set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description: post.data.excerpt || undefined,
+    datePublished: post.data.date.toISOString(),
+    author: { '@type': 'Person', name: siteConfig.title },
+    image: post.data.cover ? absolute(post.data.cover) : undefined,
+  })}></script>
+
+  <script is:inline>
+    const shareBtn = document.getElementById('share-btn');
+    shareBtn?.addEventListener('click', async () => {
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: document.title, url: location.href });
+        } else {
+          await navigator.clipboard.writeText(location.href);
+          shareBtn.textContent = '链接已复制 ✓';
+        }
+      } catch {}
+    });
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    copyLinkBtn?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copyLinkBtn.textContent = '链接已复制 ✓';
+        setTimeout(() => (copyLinkBtn.textContent = '复制链接'), 1500);
+      } catch {}
+    });
+  </script>
 </Base>

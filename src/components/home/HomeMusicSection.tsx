@@ -10,6 +10,7 @@ export interface MusicCardItem {
   cover?: string;
   audio?: string;
   lyrics?: string;
+  lyricsText?: string;
   rating: string;
   review: string;
 }

@@ -4,10 +4,11 @@ import {
   filterPublished,
   getAdjacent,
   groupByYear,
+  sortPosts,
   sortByDateDesc,
 } from '../posts';
 
-type Post = { id: string; data: { date: Date; tags?: string[]; draft?: boolean } };
+type Post = { id: string; data: { date: Date; tags?: string[]; draft?: boolean; pinned?: boolean } };
 
 const post = (id: string, date: string, extra: Partial<Post['data']> = {}): Post => ({
   id,
@@ -23,6 +24,18 @@ describe('sortByDateDesc', () => {
   it('keeps input order for equal dates', () => {
     const posts = [post('x', '2026-01-01'), post('y', '2026-01-01')];
     expect(sortByDateDesc(posts).map((p) => p.id)).toEqual(['x', 'y']);
+  });
+});
+
+describe('sortPosts', () => {
+  it('sorts pinned posts first, then by date desc', () => {
+    const posts = [
+      post('a', '2026-01-01', { pinned: true }),
+      post('b', '2026-06-01'),
+      post('c', '2026-07-01', { pinned: true }),
+      post('d', '2026-02-01'),
+    ];
+    expect(sortPosts(posts).map((p) => p.id)).toEqual(['c', 'a', 'b', 'd']);
   });
 });
 

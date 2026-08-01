@@ -85,6 +85,22 @@ function injectStyles(): void {
       line-height: 1.6;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
+    .ks-preview-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 9998;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #7c6cf6, #38bdf8);
+      color: #fff;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s ease;
+    }
+    .ks-preview-btn:hover {
+      transform: translateY(-2px);
+    }
   `;
   document.head.appendChild(style);
 }
@@ -117,6 +133,30 @@ function installLargeFileGuard(): void {
     },
     true,
   );
+}
+
+function installPreviewButton(): void {
+  const match = location.pathname.match(
+    /^\/keystatic\/collection\/(posts|songs|chatters|projects|friends|photos)\/item\/([^/]+)/,
+  );
+  if (!match || document.getElementById('ks-preview-btn')) return;
+  const [, collection, slug] = match;
+const target = ({
+    posts: `/posts/${encodeURIComponent(slug)}/`,
+    songs: '/music',
+    chatters: '/chatter/',
+    projects: '/',
+    friends: '/friends/',
+    photos: '/photowall/',
+  } as Record<string, string>)[collection] ?? '/';
+  const btn = document.createElement('a');
+  btn.id = 'ks-preview-btn';
+  btn.className = 'ks-preview-btn';
+  btn.href = target;
+  btn.target = '_blank';
+  btn.rel = 'noopener';
+  btn.textContent = '前台预览 ↗';
+  document.documentElement.appendChild(btn);
 }
 
 function translateUI(): void {
@@ -187,7 +227,7 @@ async function autofillFromAudio(download: HTMLAnchorElement | HTMLButtonElement
     const blob = await (await fetch(href, { signal: AbortSignal.timeout(8000) })).blob();
     // 超大文件跳过元数据解析，避免内存压力导致页面卡死
     if (blob.size > 100 * 1024 * 1024) return;
-    const meta = await parseBlob(blob, { mimeType: blob.type || 'audio/mpeg' });
+    const meta = await parseBlob(blob);
     const title = meta.common.title?.trim();
     const artist = meta.common.artist?.trim();
     if (title) {
@@ -272,6 +312,7 @@ function init(): void {
   injectStyles();
   installLargeFileGuard();
   installSaveFeedback();
+  installPreviewButton();
   let scanTimer: number | undefined;
   const scan = () => {
     translateUI();
@@ -286,7 +327,10 @@ function init(): void {
     window.clearTimeout(scanTimer);
     scanTimer = window.setTimeout(scan, 400);
   };
-  scan();
+  // 延后到 React 水合完成后再开始修改 DOM，避免水合不匹配
+  window.setTimeout(() => {
+    scan();
+  }, 1200);
   const bodyObserver = new MutationObserver(scheduleScan);
   bodyObserver.observe(document.body, {
     childList: true,

@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
 import { type Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { audioStore } from '../../lib/audio-store';
+import { audioStore, type PlayMode } from '../../lib/audio-store';
 import { currentLineIndex, parseLrc, type LyricLine } from '../../lib/lrc';
 import { buildTrack } from '../../lib/track';
+import { loadPlayerPrefs, savePlayerPrefs } from '../../lib/prefs';
 
 export interface SongItem {
   id: string;
@@ -12,6 +12,7 @@ export interface SongItem {
   cover?: string;
   audio?: string;
   lyrics?: string;
+  lyricsText?: string;
 }
 
 export interface MusicPlayerHandle {
@@ -33,6 +34,7 @@ const formatTime = (seconds: number): string => {
 
 export default function MusicPlayer({ songs, ref, bare = false }: Props) {
   const activeLineRef = useRef<HTMLDivElement>(null);
+  const lastSavedRef = useRef('');
   const [state, setState] = useState(audioStore.state);
   const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
   const [lyricMode, setLyricMode] = useState<'lrc' | 'text' | null>(null);
@@ -44,6 +46,29 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     if (current && songs.some((song) => song.id === current.id)) return;
     const first = songs.find((song) => song.audio);
     if (first) audioStore.select(buildTrack(first));
+  }, [songs]);
+
+  // 恢复播放偏好（音量/模式/上次歌曲），并监听变化保存
+  useEffect(() => {
+    const prefs = loadPlayerPrefs(window.localStorage);
+    audioStore.setVolume(prefs.volume);
+    audioStore.setMode(prefs.mode);
+    if (!audioStore.state.track && prefs.lastSongId) {
+      const last = songs.find((song) => song.id === prefs.lastSongId && song.audio);
+      if (last) audioStore.select(buildTrack(last));
+    }
+    return audioStore.subscribe(() => {
+      const state = audioStore.state;
+      const key = `${state.volume}|${state.mode}|${state.track?.id ?? ''}`;
+      if (key !== lastSavedRef.current) {
+        lastSavedRef.current = key;
+        savePlayerPrefs(window.localStorage, {
+          volume: state.volume,
+          mode: state.mode,
+          lastSongId: state.track?.id,
+        });
+      }
+    });
   }, [songs]);
 
   const playById = useCallback(
@@ -74,10 +99,31 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
 
   const playNext = useCallback(() => {
     if (currentIndex < 0) return;
+    if (state.mode === 'repeat-one') {
+      playAt(currentIndex);
+      return;
+    }
+    const queued = audioStore.takeFromQueue();
+    if (queued?.src) {
+      audioStore.play(queued);
+      return;
+    }
+    if (state.mode === 'shuffle') {
+      playAt(Math.floor(Math.random() * songs.length));
+      return;
+    }
     playAt((currentIndex + 1) % songs.length);
-  }, [currentIndex, songs, playAt]);
+  }, [currentIndex, songs, state.mode, playAt]);
 
   const togglePlay = useCallback(() => audioStore.toggle(), []);
+
+  const cycleMode = () => {
+    const next: PlayMode =
+      state.mode === 'order' ? 'shuffle' : state.mode === 'shuffle' ? 'repeat-one' : 'order';
+    audioStore.setMode(next);
+  };
+
+  const modeLabel = state.mode === 'order' ? '顺序播放' : state.mode === 'shuffle' ? '随机播放' : '单曲循环';
 
   // 一首播完后自动切到下一首（循环）
   useEffect(() => audioStore.onEnded(() => playNext()), [playNext]);
@@ -85,35 +131,42 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
   useEffect(() => {
     let cancelled = false;
     const lyricsSrc = state.track?.lyricsSrc;
+    const lyricsText = state.track?.lyricsText;
     setLyrics(null);
     setLyricMode(null);
+    const applyText = (content: string, isLrc: boolean) => {
+      if (cancelled) return;
+      const lines = content
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (!lines.length) return;
+      if (isLrc) {
+        const parsed = parseLrc(content);
+        if (parsed.length > 0) {
+          setLyrics(parsed);
+          setLyricMode('lrc');
+          return;
+        }
+      }
+      setLyrics(lines.map((line, i) => ({ time: i, text: line })));
+      setLyricMode('text');
+    };
+    if (lyricsText) {
+      applyText(lyricsText, true);
+      return;
+    }
     if (!lyricsSrc) return;
     fetch(lyricsSrc)
       .then((res) => (res.ok ? res.text() : Promise.reject(new Error('lyrics'))))
       .then((text) => {
-        if (cancelled) return;
-        if (/\.lrc$/i.test(lyricsSrc)) {
-          const parsed = parseLrc(text);
-          if (parsed.length > 0) {
-            setLyrics(parsed);
-            setLyricMode('lrc');
-          }
-        } else {
-          const lines = text
-            .split(/\r?\n/)
-            .map((line) => line.trim())
-            .filter(Boolean);
-          if (lines.length > 0) {
-            setLyrics(lines.map((line, i) => ({ time: i, text: line })));
-            setLyricMode('text');
-          }
-        }
+        applyText(text, /\.lrc$/i.test(lyricsSrc));
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [state.track?.lyricsSrc]);
+  }, [state.track?.lyricsSrc, state.track?.lyricsText]);
 
   const activeIndex = lyricMode === 'lrc' && lyrics ? currentLineIndex(lyrics, state.currentTime) : -1;
 
@@ -223,6 +276,13 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
           aria-label="音量"
           className="w-28 accent-[var(--accent)]"
         />
+        <button
+          type="button"
+          onClick={cycleMode}
+          className="widget-glass rounded-full px-3 py-1 text-xs text-[var(--text-2)] transition hover:text-[var(--text)]"
+        >
+          {modeLabel}
+        </button>
         {state.error && <span className="text-xs text-rose-400">{state.error}</span>}
       </div>
 

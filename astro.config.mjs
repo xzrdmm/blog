@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
 import keystatic from '@keystatic/astro';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -15,7 +16,7 @@ export default defineConfig({
   // 开发环境使用根路径（/keystatic 可直接访问）；
   // 生产构建保持 /blog/ 以匹配 GitHub Pages 项目站点。
   base: isProduction ? '/blog/' : '/',
-  integrations: [react(), ...(isProduction ? [] : [keystatic()])],
+  integrations: [react(), sitemap(), ...(isProduction ? [] : [keystatic()])],
   vite: {
     plugins: [tailwindcss()],
   },

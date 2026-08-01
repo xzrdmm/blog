@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import { Content } from '../content/about/index.md';
+
+const aboutModules = import.meta.glob('../content/about/*.md', {
+  eager: true,
+  query: { type: 'frontmatter' },
+});
+const aboutTitle = (Object.values(aboutModules)[0] as { title?: string } | undefined)?.title ?? '关于我';
+---
+
+<Base title="关于" description="关于我">
+  <header class="post-header glass">
+    <h1>{aboutTitle}</h1>
+  </header>
+  <div class="prose glass">
+    <Content />
+  </div>
+</Base>

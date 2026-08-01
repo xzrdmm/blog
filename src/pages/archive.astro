@@ -1,10 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { filterPublished, groupByYear, sortByDateDesc } from '../lib/posts';
+import { filterPublished, groupByYear, sortPosts } from '../lib/posts';
 import { formatDate } from '../lib/format';
 
-const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+const posts = sortPosts(filterPublished(await getCollection('posts')));
 const groups = groupByYear(posts);
 const base = import.meta.env.BASE_URL;
 ---

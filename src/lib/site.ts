@@ -16,6 +16,7 @@ export interface SiteConfig {
   featuredPosts: string[];
   featuredProjects: string[];
   featuredSongs: string[];
+  goatcounterSite: string;
   bgImages: string[];
 }
 

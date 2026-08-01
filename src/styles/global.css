@@ -717,6 +717,60 @@ html[data-theme="dark"] .icon-moon {
   box-shadow: var(--glass-shadow);
 }
 
+.prose pre:has(.code-bar) {
+  padding-top: 0;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #8b93b8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.code-copy {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd2ea;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.code-copy:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 15, 0.82);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  cursor: zoom-out;
+  padding: 24px;
+}
+
+.lightbox img {
+  max-width: min(100%, 1100px);
+  max-height: 90vh;
+  border-radius: 14px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.6);
+}
+
 .prose pre code {
   background: none;
   color: inherit;
@@ -798,6 +852,45 @@ html[data-theme="dark"] .icon-moon {
 
 .post-nav .next {
   text-align: right;
+}
+
+.toc {
+  margin-top: 20px;
+  padding: 18px 22px;
+}
+
+.toc-title {
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li {
+  margin: 4px 0;
+}
+
+.toc a {
+  color: var(--text-2);
+  font-size: 0.9rem;
+  transition: color 0.15s ease;
+}
+
+.toc a:hover {
+  color: var(--accent);
+}
+
+.share-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 /* ============ 归档 / 标签 / 说说页 ============ */

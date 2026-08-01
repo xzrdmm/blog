@@ -1,11 +1,11 @@
 import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
 import { getCollection } from 'astro:content';
-import { filterPublished, sortByDateDesc } from '../lib/posts';
+import { filterPublished, sortPosts } from '../lib/posts';
 import { siteConfig } from '../lib/site';
 
 export async function GET(context: APIContext) {
-  const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+  const posts = sortPosts(filterPublished(await getCollection('posts')));
   const site = context.site ?? 'https://example.com';
 
   return rss({

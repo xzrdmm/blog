@@ -16,8 +16,7 @@ export default config({
       entryLayout: 'content',
       schema: {
         title: fields.slug({
-          name: { label: '标题' },
-          description: '文章标题，同时用于生成 URL。',
+          name: { label: '标题', description: '文章标题，同时用于生成 URL。' },
         }),
         date: fields.date({
           label: '发布日期',
@@ -42,6 +41,11 @@ export default config({
           defaultValue: false,
           description: '开启后不会出现在列表与 RSS 中。',
         }),
+        pinned: fields.checkbox({
+          label: '置顶',
+          defaultValue: false,
+          description: '开启后文章排在列表与归档的最前面。',
+        }),
         content: fields.markdoc({
           label: '正文',
           description: '支持标准 Markdown、代码块与引用。',
@@ -57,8 +61,7 @@ export default config({
       entryLayout: 'content',
       schema: {
         title: fields.slug({
-          name: { label: '标题' },
-          description: '说说标题，同时用于生成 URL。',
+          name: { label: '标题', description: '说说标题，同时用于生成 URL。' },
         }),
         date: fields.date({
           label: '日期',
@@ -78,8 +81,7 @@ export default config({
       format: { data: 'json' },
       schema: {
         title: fields.slug({
-          name: { label: '歌名' },
-          description: '歌名，同时用于生成 URL。',
+          name: { label: '歌名', description: '歌名，同时用于生成 URL。' },
         }),
         artist: fields.text({ label: '歌手/艺术家' }),
         playlist: fields.text({
@@ -102,6 +104,11 @@ export default config({
           directory: 'public/music/lyrics',
           publicPath: '/music/lyrics',
           description: '推荐 .lrc（逐行同步），也支持纯文本 .txt（静态展示）。',
+        }),
+        lyricsText: fields.text({
+          label: '歌词文本（LRC）',
+          multiline: true,
+          description: '可直接粘贴/编辑 LRC 歌词；与「歌词字幕」文件二选一，歌词文件优先。',
         }),
         rating: fields.select({
           label: '评分',
@@ -134,8 +141,7 @@ export default config({
       format: { data: 'json' },
       schema: {
         title: fields.slug({
-          name: { label: '项目名' },
-          description: '项目名称，同时用于生成 URL。',
+          name: { label: '项目名', description: '项目名称，同时用于生成 URL。' },
         }),
         description: fields.text({
           label: '简介',
@@ -150,6 +156,55 @@ export default config({
         tags: fields.array(fields.text({ label: '标签' }), {
           label: '标签',
           itemLabel: (props) => props.value || '标签',
+        }),
+        draft: fields.checkbox({
+          label: '草稿',
+          defaultValue: false,
+        }),
+      },
+    }),
+    friends: collection({
+      label: '友链',
+      slugField: 'name',
+      path: 'src/content/friends/*',
+      format: { data: 'json' },
+      schema: {
+        name: fields.slug({
+          name: { label: '昵称', description: '友链名称，同时用于生成 URL。' },
+        }),
+        url: fields.url({ label: '网站链接' }),
+        avatar: fields.image({
+          label: '头像',
+          directory: 'public/images/friends',
+          publicPath: '/images/friends',
+        }),
+        description: fields.text({
+          label: '简介',
+          multiline: true,
+        }),
+        draft: fields.checkbox({
+          label: '草稿',
+          defaultValue: false,
+        }),
+      },
+    }),
+    photos: collection({
+      label: '照片墙',
+      slugField: 'caption',
+      path: 'src/content/photos/*',
+      format: { data: 'json' },
+      schema: {
+        caption: fields.slug({
+          name: { label: '说明', description: '照片说明，同时用于生成 URL。' },
+        }),
+        image: fields.image({
+          label: '图片',
+          directory: 'public/images/photos',
+          publicPath: '/images/photos',
+        }),
+        date: fields.date({
+          label: '日期',
+          defaultValue: { kind: 'today' },
         }),
         draft: fields.checkbox({
           label: '草稿',
@@ -239,10 +294,28 @@ export default config({
             itemLabel: (props) => props.value || '选择歌曲',
           },
         ),
+        goatcounterSite: fields.text({
+          label: 'GoatCounter 站点 ID',
+          description: '可选：填入后启用访问统计（https://www.goatcounter.com），例如 my-blog。',
+        }),
         bgImages: fields.array(fields.image({ label: '背景图', directory: 'public/images/bg', publicPath: '/images/bg' }), {
           label: '背景图',
           description: '可选：缓慢轮换的固定背景图片。',
           itemLabel: () => '背景图',
+        }),
+      },
+    }),
+    about: singleton({
+      label: '关于我',
+      path: 'src/content/about',
+      format: { contentField: 'content' },
+      entryLayout: 'content',
+      schema: {
+        title: fields.text({ label: '标题', defaultValue: '关于我' }),
+        content: fields.markdoc({
+          label: '内容',
+          description: '自我介绍、经历、联系方式等，支持 Markdown。',
+          extension: 'md',
         }),
       },
     }),

@@ -6,7 +6,10 @@ export interface Track {
   cover?: string;
   playlist?: string;
   lyricsSrc?: string;
+  lyricsText?: string;
 }
+
+export type PlayMode = 'order' | 'shuffle' | 'repeat-one';
 
 export interface AudioState {
   track: Track | null;
@@ -16,6 +19,8 @@ export interface AudioState {
   volume: number;
   error: string;
   loading: boolean;
+  mode: PlayMode;
+  queue: Track[];
 }
 
 type Listener = () => void;
@@ -32,6 +37,8 @@ export class AudioStore {
     volume: 1,
     error: '',
     loading: false,
+    mode: 'order',
+    queue: [],
   };
 
   play(track: Track): void {
@@ -79,6 +86,29 @@ export class AudioStore {
 
   setLoading(loading: boolean): void {
     this.setState({ loading });
+  }
+
+  setMode(mode: PlayMode): void {
+    this.setState({ mode });
+  }
+
+  addToQueue(track: Track): void {
+    this.setState({ queue: [...this.state.queue, track] });
+  }
+
+  takeFromQueue(): Track | null {
+    const [next, ...rest] = this.state.queue;
+    this.setState({ queue: rest });
+    return next ?? null;
+  }
+
+  removeFromQueue(index: number): void {
+    const queue = this.state.queue.filter((_, i) => i !== index);
+    this.setState({ queue });
+  }
+
+  clearQueue(): void {
+    this.setState({ queue: [] });
   }
 
   subscribe(listener: Listener): () => void {

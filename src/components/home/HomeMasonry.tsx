@@ -36,8 +36,12 @@ const fadeUp = {
 };
 
 export default function HomeMasonry({ items, base }: Props) {
+  const columnClass =
+    items.length <= 2
+      ? 'columns-1 gap-5 sm:columns-2'
+      : 'columns-1 gap-5 sm:columns-2 lg:columns-3';
   return (
-    <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
+    <div className={columnClass}>
       {items.map((item) =>
         item.kind === 'post' ? (
           <motion.article key={item.id} {...fadeUp} className="glass mb-5 overflow-hidden rounded-2xl break-inside-avoid">

@@ -1,9 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { collectTags, filterPublished, sortByDateDesc } from '../../lib/posts';
+import { collectTags, filterPublished, sortPosts } from '../../lib/posts';
 
-const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+const posts = sortPosts(filterPublished(await getCollection('posts')));
 const tags = collectTags(posts);
 const base = import.meta.env.BASE_URL;
 ---

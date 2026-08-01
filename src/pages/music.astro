@@ -13,6 +13,7 @@ const songProps = songs.map((song) => ({
   cover: song.data.cover ? assetPath(song.data.cover) : undefined,
   audio: song.data.audio ? assetPath(song.data.audio) : undefined,
   lyrics: song.data.lyrics ? assetPath(song.data.lyrics) : undefined,
+  lyricsText: song.data.lyricsText,
   rating: song.data.rating,
   review: song.data.review,
 }));

@@ -140,4 +140,34 @@ describe('AudioStore', () => {
     store.setVolume(-1);
     expect(store.state.volume).toBe(0);
   });
+
+  it('sets play mode', () => {
+    const store = new AudioStore();
+    store.setMode('shuffle');
+    expect(store.state.mode).toBe('shuffle');
+    store.setMode('repeat-one');
+    expect(store.state.mode).toBe('repeat-one');
+  });
+
+  it('queues tracks in FIFO order and clears', () => {
+    const store = new AudioStore();
+    const a = { ...track, src: '/a.mp3' };
+    const b = { ...track, src: '/b.mp3' };
+    store.addToQueue(a);
+    store.addToQueue(b);
+    expect(store.takeFromQueue()).toEqual(a);
+    expect(store.takeFromQueue()).toEqual(b);
+    expect(store.takeFromQueue()).toBeNull();
+    store.addToQueue(a);
+    store.clearQueue();
+    expect(store.takeFromQueue()).toBeNull();
+  });
+
+  it('removes a track from the queue by index', () => {
+    const store = new AudioStore();
+    store.addToQueue({ ...track, src: '/a.mp3' });
+    store.addToQueue({ ...track, src: '/b.mp3' });
+    store.removeFromQueue(0);
+    expect(store.state.queue[0].src).toBe('/b.mp3');
+  });
 });

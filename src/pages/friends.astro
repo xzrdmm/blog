@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { assetPath } from '../lib/paths';
+
+const friends = (await getCollection('friends')).filter((friend) => !friend.data.draft);
+---
+
+<Base title="友链" description="朋友们">
+  <header class="page-header glass">
+    <h1>友链</h1>
+    <p>交换链接的朋友们。</p>
+  </header>
+  {friends.length > 0 ? (
+    <div class="post-grid" style="margin-top:22px">
+      {friends.map((friend) => (
+        <a
+          class="post-card glass"
+          href={friend.data.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="post-card-body" style="align-items:center;text-align:center">
+            {friend.data.avatar ? (
+              <img
+                class="profile-avatar"
+                src={assetPath(friend.data.avatar)}
+                alt={friend.data.name}
+                loading="lazy"
+              />
+            ) : (
+              <div class="profile-avatar" style="background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent);font-family:var(--font-display)">
+                {friend.data.name.slice(0, 1)}
+              </div>
+            )}
+            <h3>{friend.data.name}</h3>
+            {friend.data.description && <p class="excerpt">{friend.data.description}</p>}
+          </div>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <p class="empty">还没有友链，去后台「友链」添加吧。</p>
+  )}
+</Base>

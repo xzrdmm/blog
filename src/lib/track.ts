@@ -8,6 +8,7 @@ export interface SongTrackSource {
   cover?: string;
   audio?: string;
   lyrics?: string;
+  lyricsText?: string;
 }
 
 export function buildTrack(song: SongTrackSource): Track {
@@ -20,5 +21,6 @@ export function buildTrack(song: SongTrackSource): Track {
     cover: song.cover,
     playlist: song.playlist,
     lyricsSrc: song.lyrics,
+    lyricsText: song.lyricsText,
   };
 }

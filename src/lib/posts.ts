@@ -11,6 +11,16 @@ export function sortByDateDesc<T extends PostLike>(posts: T[]): T[] {
   return [...posts].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 }
 
+export function sortPosts<T extends PostLike & { data: { pinned?: boolean } }>(
+  posts: T[],
+): T[] {
+  return [...posts].sort(
+    (a, b) =>
+      Number(b.data.pinned ?? false) - Number(a.data.pinned ?? false) ||
+      b.data.date.getTime() - a.data.date.getTime(),
+  );
+}
+
 export function filterPublished<T extends PostLike>(posts: T[]): T[] {
   return posts.filter((post) => !post.data.draft);
 }

@@ -7,7 +7,7 @@ import Carousel from '../components/Carousel.astro';
 import HeroPanel from '../components/home/HeroPanel.tsx';
 import HomeMusicSection from '../components/home/HomeMusicSection.tsx';
 import HomeMasonry from '../components/home/HomeMasonry.tsx';
-import { filterPublished, sortByDateDesc } from '../lib/posts';
+import { filterPublished, sortByDateDesc, sortPosts } from '../lib/posts';
 import {
   curateFeaturedPosts,
   curateFeaturedProjects,
@@ -18,7 +18,7 @@ import { assetPath } from '../lib/paths';
 import { makeExcerpt } from '../lib/content';
 import { siteConfig } from '../lib/site';
 
-const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+const posts = sortPosts(filterPublished(await getCollection('posts')));
 const chatters = sortByDateDesc(await getCollection('chatters'));
 const songs = (await getCollection('songs')).filter((song) => !song.data.draft);
 const projects = (await getCollection('projects')).filter((project) => !project.data.draft);
@@ -33,6 +33,7 @@ const heroSongProps = songs.map((song) => ({
   cover: song.data.cover ? assetPath(song.data.cover) : undefined,
   audio: song.data.audio ? assetPath(song.data.audio) : undefined,
   lyrics: song.data.lyrics ? assetPath(song.data.lyrics) : undefined,
+  lyricsText: song.data.lyricsText,
 }));
 
 const featuredSongs = curateFeaturedSongs(songs, siteConfig.featuredSongs, 6);
@@ -44,6 +45,7 @@ const musicSectionSongs = featuredSongs.map((song) => ({
   cover: song.data.cover ? assetPath(song.data.cover) : undefined,
   audio: song.data.audio ? assetPath(song.data.audio) : undefined,
   lyrics: song.data.lyrics ? assetPath(song.data.lyrics) : undefined,
+  lyricsText: song.data.lyricsText,
   rating: song.data.rating,
   review: song.data.review,
 }));
@@ -76,16 +78,6 @@ const masonryItems = interleaveMasonry(postItems, projectItems, 6);
     <HeroPanel client:load songs={heroSongProps} />
   </section>
 
-  {musicSectionSongs.length > 0 && (
-    <section class="section">
-      <div class="section-head">
-        <h2>音乐</h2>
-        <a class="section-more" href={`${base}music/`}>查看全部 →</a>
-      </div>
-      <HomeMusicSection client:load songs={musicSectionSongs} />
-    </section>
-  )}
-
   {chatters.length > 0 && (
     <section class="section">
       <div class="section-head">
@@ -109,4 +101,14 @@ const masonryItems = interleaveMasonry(postItems, projectItems, 6);
       <p class="empty">还没有内容，去后台写第一篇吧。</p>
     )}
   </section>
+
+  {musicSectionSongs.length > 0 && (
+    <section class="section">
+      <div class="section-head">
+        <h2>音乐</h2>
+        <a class="section-more" href={`${base}music/`}>查看全部 →</a>
+      </div>
+      <HomeMusicSection client:load songs={musicSectionSongs} />
+    </section>
+  )}
 </Base>

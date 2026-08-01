@@ -3,10 +3,10 @@ import { getCollection } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
-import { collectTags, filterPublished, sortByDateDesc } from '../../lib/posts';
+import { collectTags, filterPublished, sortPosts } from '../../lib/posts';
 
 export const getStaticPaths = (async () => {
-  const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
+  const posts = sortPosts(filterPublished(await getCollection('posts')));
   const tags = collectTags(posts);
   return tags.map(({ tag }) => ({
     params: { tag },

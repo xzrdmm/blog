@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MusicPlayer, { type MusicPlayerHandle, type SongItem } from './MusicPlayer';
 import { groupByPlaylist } from '../../lib/music';
+import { audioStore } from '../../lib/audio-store';
+import { buildTrack } from '../../lib/track';
 
 export interface SongWithReview extends SongItem {
   rating: string;
@@ -14,7 +16,10 @@ interface Props {
 export default function MusicPageClient({ songs }: Props) {
   const [playlist, setPlaylist] = useState('全部');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [queue, setQueue] = useState(audioStore.state.queue);
   const playerRef = useRef<MusicPlayerHandle>(null);
+
+  useEffect(() => audioStore.subscribe(() => setQueue(audioStore.state.queue)), []);
 
   const groups = useMemo(() => groupByPlaylist(songs), [songs]);
   const filtered = useMemo(
@@ -63,13 +68,21 @@ export default function MusicPageClient({ songs }: Props) {
             <ul className="glass divide-y divide-white/10 overflow-hidden rounded-2xl">
               {filtered.map((song) => (
                 <li key={song.id}>
-                  <button
-                    type="button"
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       setSelectedId(song.id);
                       playerRef.current?.playById(song.id);
                     }}
-                    className={`flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedId(song.id);
+                        playerRef.current?.playById(song.id);
+                      }
+                    }}
+                    className={`flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5 ${
                       selected?.id === song.id ? 'bg-white/5' : ''
                     }`}
                   >
@@ -85,13 +98,53 @@ export default function MusicPageClient({ songs }: Props) {
                     <span className="shrink-0 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-xs text-[var(--accent)]">
                       {song.playlist || '未分类'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (song.audio) audioStore.addToQueue(buildTrack(song));
+                      }}
+                      className="shrink-0 rounded-full bg-white/5 px-2.5 py-1 text-xs text-[var(--text-2)] transition hover:bg-white/10 hover:text-[var(--text)]"
+                    >
+                      入队
+                    </button>
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="shrink-0 text-[var(--text-3)]" aria-hidden="true">
                       <path d="M8 5.14v13.72L19 12 8 5.14z"></path>
                     </svg>
-                  </button>
+                  </div>
                 </li>
               ))}
             </ul>
+            {queue.length > 0 && (
+              <div className="glass rounded-2xl p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-[var(--text)]">
+                    播放队列（{queue.length}）
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => audioStore.clearQueue()}
+                    className="text-xs text-[var(--text-3)] transition hover:text-[var(--accent)]"
+                  >
+                    清空
+                  </button>
+                </div>
+                <ul className="mt-2 flex flex-col gap-1">
+                  {queue.map((queued, index) => (
+                    <li key={`${queued.id}-${index}`} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="truncate text-[var(--text-2)]">{queued.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => audioStore.removeFromQueue(index)}
+                        className="shrink-0 text-xs text-[var(--text-3)] transition hover:text-[var(--accent)]"
+                      >
+                        移除
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <aside className="widget-glass h-fit rounded-2xl p-5 lg:sticky lg:top-24">

@@ -10,22 +10,27 @@
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
-    "music:import": "node scripts/music-import.mjs"
+    "music:import": "node scripts/music-import.mjs",
+    "backup": "node scripts/backup.mjs",
+    "check": "astro check"
   },
   "dependencies": {
     "@astrojs/react": "^4.0.0",
     "@astrojs/rss": "^4.0.0",
+    "@astrojs/sitemap": "^3.7.3",
     "@keystatic/astro": "^5.2.0",
     "@keystatic/core": "0.6.3",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^5.0.0",
     "framer-motion": "^12.43.0",
+    "minisearch": "^7.2.0",
     "music-metadata": "^11.14.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "vitest": "^3.0.0"
   }
 }

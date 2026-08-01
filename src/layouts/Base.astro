@@ -5,6 +5,7 @@ import { ViewTransitions } from 'astro:transitions';
 import ScrollProgress from '../components/widgets/ScrollProgress.tsx';
 import BackToTop from '../components/widgets/BackToTop.tsx';
 import FloatingClock from '../components/widgets/FloatingClock.tsx';
+import SearchButton from '../components/widgets/SearchButton.tsx';
 import MiniPlayer from '../components/music/MiniPlayer.tsx';
 import AudioHost from '../components/music/AudioHost.tsx';
 import '../styles/global.css';
@@ -12,11 +13,14 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, image } = Astro.props;
 const pageTitle = title ? `${title} · ${siteConfig.title}` : siteConfig.title;
 const pageDescription = description ?? siteConfig.bio;
+const absolute = (path: string) => new URL(assetPath(path), Astro.site).href;
+const pageImage = image ? absolute(image) : absolute(siteConfig.avatar);
 
 const base = import.meta.env.BASE_URL;
 const here = Astro.url.pathname;
@@ -33,6 +37,9 @@ const navItems = [
   { href: `${base}chatter`, label: '说说' },
   { href: `${base}tags`, label: '标签' },
   { href: `${base}archive`, label: '归档' },
+  { href: `${base}about`, label: '关于' },
+  { href: `${base}friends`, label: '友链' },
+  { href: `${base}photowall`, label: '照片墙' },
 ];
 
 const particles = Array.from({ length: 16 }, (_, i) => ({
@@ -61,12 +68,37 @@ const bgStyle = bgImage
     <meta name="description" content={pageDescription} />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href={assetPath('/favicon.svg')} />
+    <link rel="manifest" href={`${base}manifest.webmanifest`} />
+    <link rel="alternate" type="application/rss+xml" title={siteConfig.title} href={`${base}rss.xml`} />
+    <meta property="og:site_name" content={siteConfig.title} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:image" content={pageImage} />
     <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    <meta name="twitter:image" content={pageImage} />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#e8edff" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0e24" />
+    {siteConfig.goatcounterSite && (
+      <script
+        is:inline
+        data-goatcounter={`https://${siteConfig.goatcounterSite}.goatcounter.com/count`}
+        async
+        src="https://gc.zgo.at/count.js"
+      ></script>
+    )}
     <ViewTransitions />
+    {import.meta.env.PROD && (
+      <script is:inline data-base={base}>
+        const swBase = document.currentScript?.getAttribute('data-base') ?? '/';
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register(`${swBase}sw.js`, { scope: swBase }).catch(() => {});
+        }
+      </script>
+    )}
     <script is:inline>
       (() => {
         try {
@@ -80,6 +112,13 @@ const bgStyle = bgImage
         }
       })();
     </script>
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: siteConfig.title,
+      description: siteConfig.bio,
+      url: Astro.url.origin,
+    })}></script>
   </head>
   <body>
     <div class="bg-scene" style={bgStyle} aria-hidden="true">
@@ -135,7 +174,72 @@ const bgStyle = bgImage
     <ScrollProgress client:load />
     <BackToTop client:load />
     <FloatingClock client:load />
+    <SearchButton client:load base={base} />
     <MiniPlayer client:load transition:persist />
+
+    <script is:inline data-base={base}>
+      // 全局快捷键：/ 打开搜索
+      const searchBase = document.currentScript?.getAttribute('data-base') ?? '/';
+      document.addEventListener('keydown', (event) => {
+        if (
+          event.key === '/' &&
+          !(event.target instanceof HTMLInputElement) &&
+          !(event.target instanceof HTMLTextAreaElement) &&
+          !location.pathname.endsWith('/search')
+        ) {
+          event.preventDefault();
+          location.href = `${searchBase}search`;
+        }
+      });
+    </script>
+
+    <script is:inline>
+      // 代码块：语言标签 + 复制按钮
+      const enhanceCodeBlocks = () => {
+        document.querySelectorAll('.prose pre').forEach((pre) => {
+          if (pre.dataset.enhanced) return;
+          pre.dataset.enhanced = '1';
+          const code = pre.querySelector('code');
+          const lang = code?.className.match(/language-([\w+-]+)/)?.[1] ?? '';
+          const bar = document.createElement('div');
+          bar.className = 'code-bar';
+          const label = document.createElement('span');
+          label.textContent = lang ? lang.toUpperCase() : 'CODE';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'code-copy';
+          btn.textContent = '复制';
+          btn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(code?.innerText ?? '');
+              btn.textContent = '已复制 ✓';
+              setTimeout(() => (btn.textContent = '复制'), 1500);
+            } catch {
+              btn.textContent = '复制失败';
+            }
+          });
+          bar.append(label, btn);
+          pre.prepend(bar);
+        });
+      };
+
+      // 图片灯箱
+      document.addEventListener('click', (event) => {
+        const img = event.target?.closest?.('.prose img');
+        if (!img) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'lightbox';
+        const clone = img.cloneNode(true);
+        overlay.appendChild(clone);
+        overlay.addEventListener('click', () => overlay.remove());
+        document.body.appendChild(overlay);
+      });
+
+      const runEnhance = () => enhanceCodeBlocks();
+      document.addEventListener('astro:page-load', runEnhance);
+      if (document.readyState !== 'loading') runEnhance();
+      else document.addEventListener('DOMContentLoaded', runEnhance);
+    </script>
 
     <script is:inline>
       const toggle = document.getElementById('theme-toggle');

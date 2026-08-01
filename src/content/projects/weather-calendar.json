@@ -1,8 +1,0 @@
-{
-  "title": "天气日历",
-  "description": "React + Vite + Tailwind 构建的天气日历小工具，支持城市切换与月历视图。",
-  "cover": "/images/covers/tech.svg",
-  "link": "",
-  "tags": ["React", "前端"],
-  "draft": false
-}

@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { assetPath } from '../lib/paths';
+import { formatDate } from '../lib/format';
+
+const photos = (await getCollection('photos'))
+  .filter((photo) => !photo.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<Base title="照片墙" description="一些瞬间">
+  <header class="page-header glass">
+    <h1>照片墙</h1>
+    <p>随手记录的一些瞬间。</p>
+  </header>
+  {photos.length > 0 ? (
+    <div class="columns-1 gap-5 sm:columns-2 lg:columns-3" style="margin-top:22px">
+      {photos.map((photo) => (
+        <figure class="glass mb-5 overflow-hidden rounded-2xl break-inside-avoid">
+          {photo.data.image && (
+            <img
+              src={assetPath(photo.data.image)}
+              alt={photo.data.caption}
+              loading="lazy"
+              class="w-full"
+            />
+          )}
+          <figcaption class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+            <span class="text-[var(--text-2)]">{photo.data.caption}</span>
+            <span class="shrink-0 text-xs text-[var(--text-3)]">
+              {formatDate(photo.data.date)}
+            </span>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  ) : (
+    <p class="empty">还没有照片，去后台「照片墙」上传吧。</p>
+  )}
+</Base>

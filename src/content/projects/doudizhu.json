@@ -1,8 +1,0 @@
-{
-  "title": "在线斗地主",
-  "description": "Node.js + TypeScript 的全栈斗地主平台：房间系统、实时对战与扩展插件。",
-  "cover": "/images/covers/life.svg",
-  "link": "",
-  "tags": ["游戏", "TypeScript"],
-  "draft": false
-}

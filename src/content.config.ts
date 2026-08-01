@@ -10,6 +10,7 @@ const posts = defineCollection({
     cover: z.string().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
+    pinned: z.boolean().default(false),
   }),
 });
 
@@ -32,6 +33,7 @@ const songs = defineCollection({
     lyrics: z.string().optional(),
     rating: z.string().default(''),
     review: z.string().default(''),
+    lyricsText: z.string().default(''),
     draft: z.boolean().default(false),
   }),
 });
@@ -48,4 +50,25 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { posts, chatters, songs, projects };
+const friends = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/friends' }),
+  schema: z.object({
+    name: z.string(),
+    url: z.string().optional(),
+    avatar: z.string().optional(),
+    description: z.string().default(''),
+    draft: z.boolean().default(false),
+  }),
+});
+
+const photos = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/photos' }),
+  schema: z.object({
+    caption: z.string(),
+    image: z.string().optional(),
+    date: z.coerce.date(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { posts, chatters, songs, projects, friends, photos };
