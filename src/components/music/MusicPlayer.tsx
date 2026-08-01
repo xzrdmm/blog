@@ -35,11 +35,28 @@ const formatTime = (seconds: number): string => {
 export default function MusicPlayer({ songs, ref, bare = false }: Props) {
   const activeLineRef = useRef<HTMLDivElement>(null);
   const lastSavedRef = useRef('');
+  const [mounted, setMounted] = useState(false);
   const [state, setState] = useState(audioStore.state);
   const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
   const [lyricMode, setLyricMode] = useState<'lrc' | 'text' | null>(null);
 
   useEffect(() => audioStore.subscribe(() => setState(audioStore.state)), []);
+  useEffect(() => setMounted(true), []);
+
+  // 首帧与 SSR 对齐（持久化音频状态不参与水合比较），挂载后再显示真实状态
+  const displayState: typeof state = mounted
+    ? state
+    : {
+        track: null,
+        playing: false,
+        currentTime: 0,
+        duration: 0,
+        volume: 1,
+        error: '',
+        loading: false,
+        mode: 'order',
+        queue: [],
+      };
 
   useEffect(() => {
     const current = audioStore.state.track;
@@ -81,7 +98,9 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
 
   useImperativeHandle(ref, () => ({ playById }), [playById]);
 
-  const currentIndex = state.track?.id ? songs.findIndex((song) => song.id === state.track?.id) : -1;
+  const currentIndex = displayState.track?.id
+    ? songs.findIndex((song) => song.id === displayState.track?.id)
+    : -1;
   const current = currentIndex >= 0 ? songs[currentIndex] : null;
 
   const playAt = useCallback(
@@ -99,7 +118,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
 
   const playNext = useCallback(() => {
     if (currentIndex < 0) return;
-    if (state.mode === 'repeat-one') {
+    if (displayState.mode === 'repeat-one') {
       playAt(currentIndex);
       return;
     }
@@ -108,30 +127,39 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
       audioStore.play(queued);
       return;
     }
-    if (state.mode === 'shuffle') {
+    if (displayState.mode === 'shuffle') {
       playAt(Math.floor(Math.random() * songs.length));
       return;
     }
     playAt((currentIndex + 1) % songs.length);
-  }, [currentIndex, songs, state.mode, playAt]);
+  }, [currentIndex, songs, displayState.mode, playAt]);
 
   const togglePlay = useCallback(() => audioStore.toggle(), []);
 
   const cycleMode = () => {
     const next: PlayMode =
-      state.mode === 'order' ? 'shuffle' : state.mode === 'shuffle' ? 'repeat-one' : 'order';
+      displayState.mode === 'order'
+        ? 'shuffle'
+        : displayState.mode === 'shuffle'
+          ? 'repeat-one'
+          : 'order';
     audioStore.setMode(next);
   };
 
-  const modeLabel = state.mode === 'order' ? '顺序播放' : state.mode === 'shuffle' ? '随机播放' : '单曲循环';
+  const modeLabel =
+    displayState.mode === 'order'
+      ? '顺序播放'
+      : displayState.mode === 'shuffle'
+        ? '随机播放'
+        : '单曲循环';
 
   // 一首播完后自动切到下一首（循环）
   useEffect(() => audioStore.onEnded(() => playNext()), [playNext]);
 
   useEffect(() => {
     let cancelled = false;
-    const lyricsSrc = state.track?.lyricsSrc;
-    const lyricsText = state.track?.lyricsText;
+    const lyricsSrc = displayState.track?.lyricsSrc;
+    const lyricsText = displayState.track?.lyricsText;
     setLyrics(null);
     setLyricMode(null);
     const applyText = (content: string, isLrc: boolean) => {
@@ -166,9 +194,10 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [state.track?.lyricsSrc, state.track?.lyricsText]);
+  }, [displayState.track?.lyricsSrc, displayState.track?.lyricsText]);
 
-  const activeIndex = lyricMode === 'lrc' && lyrics ? currentLineIndex(lyrics, state.currentTime) : -1;
+  const activeIndex =
+    lyricMode === 'lrc' && lyrics ? currentLineIndex(lyrics, displayState.currentTime) : -1;
 
   useEffect(() => {
     if (activeIndex >= 0) {
@@ -218,11 +247,11 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
           <button
             type="button"
             onClick={togglePlay}
-            disabled={!state.track}
-            aria-label={state.playing ? '暂停' : '播放'}
+          disabled={!displayState.track}
+          aria-label={displayState.playing ? '暂停' : '播放'}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-lg transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-40"
           >
-            {state.playing ? (
+            {displayState.playing ? (
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
                 <rect x="6" y="4" width="4" height="16" rx="1"></rect>
                 <rect x="14" y="4" width="4" height="16" rx="1"></rect>
@@ -251,16 +280,16 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
         <input
           type="range"
           min={0}
-          max={state.duration || 0}
+          max={displayState.duration || 0}
           step={0.1}
-          value={Math.min(state.currentTime, state.duration || 0)}
+          value={Math.min(displayState.currentTime, displayState.duration || 0)}
           onChange={(e) => audioStore.setTime(Number(e.target.value))}
           aria-label="播放进度"
           className="w-full accent-[var(--accent)]"
         />
         <div className="flex justify-between text-xs text-[var(--text-3)] tabular-nums">
-          <span>{formatTime(state.currentTime)}</span>
-          <span>{state.loading ? '加载中…' : formatTime(state.duration)}</span>
+          <span>{formatTime(displayState.currentTime)}</span>
+          <span>{displayState.loading ? '加载中…' : formatTime(displayState.duration)}</span>
         </div>
       </div>
 
@@ -271,7 +300,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
           min={0}
           max={1}
           step={0.05}
-          value={state.volume}
+          value={displayState.volume}
           onChange={(e) => audioStore.setVolume(Number(e.target.value))}
           aria-label="音量"
           className="w-28 accent-[var(--accent)]"
@@ -283,7 +312,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
         >
           {modeLabel}
         </button>
-        {state.error && <span className="text-xs text-rose-400">{state.error}</span>}
+        {displayState.error && <span className="text-xs text-rose-400">{displayState.error}</span>}
       </div>
 
       <div>

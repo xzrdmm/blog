@@ -374,6 +374,8 @@ img {
   margin-left: auto;
   overflow-x: auto;
   scrollbar-width: none;
+  min-width: 0;
+  flex: 1;
 }
 
 .nav-links::-webkit-scrollbar {

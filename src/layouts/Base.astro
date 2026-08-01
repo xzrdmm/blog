@@ -100,7 +100,7 @@ const bgStyle = bgImage
       </script>
     )}
     <script is:inline>
-      (() => {
+      const applyTheme = () => {
         try {
           const stored = localStorage.getItem('theme');
           const dark = stored
@@ -110,7 +110,10 @@ const bgStyle = bgImage
         } catch {
           document.documentElement.dataset.theme = 'light';
         }
-      })();
+      };
+      // 首次加载与 View Transitions 切换后都应用主题
+      document.addEventListener('astro:page-load', applyTheme);
+      applyTheme();
     </script>
     <script type="application/ld+json" is:inline set:html={JSON.stringify({
       '@context': 'https://schema.org',
