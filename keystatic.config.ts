@@ -67,6 +67,11 @@ export default config({
           label: '日期',
           defaultValue: { kind: 'today' },
         }),
+        draft: fields.checkbox({
+          label: '草稿',
+          defaultValue: false,
+          description: '开启后不会出现在首页与说说页。',
+        }),
         content: fields.markdoc({
           label: '内容',
           description: '短小的碎片记录。',

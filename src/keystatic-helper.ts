@@ -33,6 +33,11 @@ const UI_TRANSLATIONS: Record<string, string> = {
   Slug: '标识',
   'No results': '暂无结果',
   Back: '返回',
+  'Delete entry…': '删除条目…',
+  'Reset changes': '重置更改',
+  'Copy entry': '复制条目',
+  'Paste entry': '粘贴条目',
+  'Duplicate entry…': '复制为草稿…',
 };
 const flags = () => window as unknown as {
   __KS_HELPER_DISABLED?: boolean;

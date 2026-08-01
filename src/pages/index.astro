@@ -19,7 +19,9 @@ import { makeExcerpt } from '../lib/content';
 import { siteConfig } from '../lib/site';
 
 const posts = sortPosts(filterPublished(await getCollection('posts')));
-const chatters = sortByDateDesc(await getCollection('chatters'));
+const chatters = sortByDateDesc(
+  (await getCollection('chatters')).filter((chatter) => !chatter.data.draft),
+);
 const songs = (await getCollection('songs')).filter((song) => !song.data.draft);
 const projects = (await getCollection('projects')).filter((project) => !project.data.draft);
 const base = import.meta.env.BASE_URL;

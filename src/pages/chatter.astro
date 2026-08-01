@@ -4,7 +4,9 @@ import Base from '../layouts/Base.astro';
 import ChatterCard from '../components/ChatterCard.astro';
 import { sortByDateDesc } from '../lib/posts';
 
-const chatters = sortByDateDesc(await getCollection('chatters'));
+const chatters = sortByDateDesc(
+  (await getCollection('chatters')).filter((chatter) => !chatter.data.draft),
+);
 ---
 
 <Base title="说说" description="碎片化的日常与灵感">

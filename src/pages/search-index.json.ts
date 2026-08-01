@@ -6,7 +6,9 @@ import { makeExcerpt, stripMarkdown } from '../lib/content';
 export async function GET(_context: APIContext) {
   const base = import.meta.env.BASE_URL;
   const posts = sortByDateDesc(filterPublished(await getCollection('posts')));
-  const chatters = sortByDateDesc(await getCollection('chatters'));
+  const chatters = sortByDateDesc(
+    (await getCollection('chatters')).filter((chatter) => !chatter.data.draft),
+  );
 
   const docs = [
     ...posts.map((post) => ({
