@@ -627,6 +627,104 @@ function installSongImporter(): void {
   document.documentElement.appendChild(btn);
 }
 
+async function runPhotoImport(): Promise<void> {
+  let root: FileSystemDirectoryHandle;
+  try {
+    showToast('请选择博客项目根目录（例如 D:\\new\\blog）');
+    root = await pickProjectRoot();
+  } catch (error) {
+    if (isAbortError(error)) {
+      showToast('已取消导入');
+      return;
+    }
+    showToast(`选择目录失败：${String(error)}`);
+    return;
+  }
+  const photosDir = await resolveDir(root, 'public/images/photos');
+  const entriesDir = await resolveDir(root, 'src/content/photos');
+  const existing = await listJsonSlugs(entriesDir);
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  input.onchange = async () => {
+    const files = [...(input.files ?? [])].filter((file) =>
+      /\.(jpe?g|png|webp|gif|avif|bmp)$/i.test(file.name),
+    );
+    if (!files.length) {
+      showToast('没有找到图片文件');
+      return;
+    }
+    showToast(`正在导入 ${files.length} 张照片…`);
+    const encoder = new TextEncoder();
+    const results: { name: string; ok: boolean; error?: string }[] = [];
+    const slugify = (value: string) =>
+      value.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').trim() || 'photo';
+
+    for (const file of files) {
+      try {
+        const base = file.name
+          .replace(/\.(jpe?g|png|webp|gif|avif|bmp)$/i, '')
+          .trim();
+        let slug = slugify(base);
+        let suffix = 2;
+        while (existing.includes(slug)) {
+          slug = `${slugify(base)}-${suffix}`;
+          suffix++;
+        }
+        existing.push(slug);
+        const ext = (file.name.match(/\.([^.]+)$/)?.[1] ?? 'jpg').toLowerCase();
+        const imageName = `image.${ext}`;
+        const subDir = await resolveDir(photosDir, slug);
+        await writeFile(subDir, imageName, new Uint8Array(await file.arrayBuffer()));
+        const entry = {
+          caption: base || slug,
+          image: `/images/photos/${slug}/${imageName}`,
+          date: new Date().toISOString().slice(0, 10),
+          draft: false,
+        };
+        await writeFile(
+          entriesDir,
+          `${slug}.json`,
+          encoder.encode(`${JSON.stringify(entry, null, 2)}\n`),
+        );
+        results.push({ name: file.name, ok: true });
+      } catch (error) {
+        results.push({ name: file.name, ok: false, error: String(error) });
+      }
+    }
+    const okCount = results.filter((result) => result.ok).length;
+    showToast(`照片导入完成：成功 ${okCount} / ${files.length} 张`);
+    if (okCount < files.length) {
+      console.warn('[keystatic-helper] 照片导入失败项：', results.filter((r) => !r.ok));
+    }
+  };
+  input.click();
+}
+
+function installPhotoImporter(): void {
+  const existing = document.getElementById('ks-photo-import-btn');
+  if (!/^\/keystatic\/collection\/photos\/?$/.test(location.pathname)) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
+  const btn = document.createElement('button');
+  btn.id = 'ks-photo-import-btn';
+  btn.className = 'ks-import-btn';
+  btn.type = 'button';
+  btn.textContent = '导入照片（批量）';
+  btn.addEventListener('click', () => {
+    if (typeof (window as unknown as DirectoryPickerWindow).showDirectoryPicker !== 'function') {
+      showToast('当前浏览器不支持直接导入，请用 Chrome / Edge 打开后台');
+      return;
+    }
+    void runPhotoImport();
+  });
+  document.documentElement.appendChild(btn);
+}
+
 function translateUI(selector = 'button, h1, h2, h3, h4, [role="menuitem"]'): void {
   for (const el of document.querySelectorAll<HTMLElement>(
     selector,
@@ -789,12 +887,14 @@ function init(): void {
   installSaveFeedback();
   installPreviewButton();
   installSongImporter();
+  installPhotoImporter();
   installSaveRepair();
   let scanTimer: number | undefined;
   const scan = () => {
     translateUI();
     installPreviewButton();
     installSongImporter();
+    installPhotoImporter();
     for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
       const text = button.textContent?.trim();
       if (text === 'Choose file' || text === '选择文件') {
