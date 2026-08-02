@@ -5,6 +5,7 @@
  * - 上传音频后自动读取 mp3/flac 元数据，回填「歌名」「歌手/艺术家」
  */
 import { parseBlob } from 'music-metadata';
+import { buildSongEntry } from './lib/import-entry';
 
 const FIELD_LABELS = new Set(['封面', '音频文件', '歌词字幕']);
 // 超过该大小的文件不让 Keystatic 读取（Keystatic 读取大文件会严重卡顿）
@@ -45,6 +46,15 @@ const flags = () => window as unknown as {
   __KS_HELPER_DISABLED?: boolean;
   __KS_NO_AUTOFILL?: boolean;
 };
+
+interface DirectoryPickerWindow {
+  showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
+}
+
+interface PermissionedDirectoryHandle extends FileSystemDirectoryHandle {
+  queryPermission?: (options: { mode: 'read' | 'readwrite' }) => Promise<string>;
+  requestPermission?: (options: { mode: 'read' | 'readwrite' }) => Promise<string>;
+}
 
 function injectStyles(): void {
   if (document.getElementById('ks-helper-style')) return;
@@ -108,6 +118,24 @@ function injectStyles(): void {
     .ks-preview-btn:hover {
       transform: translateY(-2px);
     }
+    .ks-import-btn {
+      position: fixed;
+      top: 64px;
+      right: 16px;
+      z-index: 9998;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      background: rgba(30, 20, 60, 0.92);
+      color: #e9e4ff;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .ks-import-btn:hover {
+      transform: translateY(-2px);
+    }
   `;
   document.head.appendChild(style);
 }
@@ -162,6 +190,167 @@ const target = ({
   btn.target = '_blank';
   btn.rel = 'noopener';
   btn.textContent = '前台预览 ↗';
+  document.documentElement.appendChild(btn);
+}
+
+function idbOpen(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('ks-import-dirs', 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('dirs');
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function idbGet(key: string): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    const db = await idbOpen();
+    return await new Promise((resolve) => {
+      const tx = db.transaction('dirs', 'readonly');
+      const request = tx.objectStore('dirs').get(key);
+      request.onsuccess = () => resolve((request.result as FileSystemDirectoryHandle) ?? null);
+      request.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function idbSet(key: string, handle: FileSystemDirectoryHandle): Promise<void> {
+  try {
+    const db = await idbOpen();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('dirs', 'readwrite');
+      tx.objectStore('dirs').put(handle, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    // 忽略存储失败，下次重新选择目录即可
+  }
+}
+
+async function pickDir(label: string, key: string): Promise<FileSystemDirectoryHandle> {
+  const stored = await idbGet(key);
+  if (stored) {
+    const permissioned = stored as PermissionedDirectoryHandle;
+    if ((await permissioned.queryPermission?.({ mode: 'readwrite' })) === 'granted') return stored;
+    if ((await permissioned.requestPermission?.({ mode: 'readwrite' })) === 'granted') return stored;
+  }
+  const picker = window as unknown as DirectoryPickerWindow;
+  const dir = await picker.showDirectoryPicker?.({ mode: 'readwrite' });
+  if (!dir) throw new Error('未选择目录');
+  await idbSet(key, dir);
+  return dir;
+}
+
+async function listJsonSlugs(dir: FileSystemDirectoryHandle): Promise<string[]> {
+  const slugs: string[] = [];
+  for await (const [name] of dir.entries()) {
+    if (name.endsWith('.json')) slugs.push(name.replace(/\.json$/, ''));
+  }
+  return slugs;
+}
+
+async function writeFile(
+  dir: FileSystemDirectoryHandle,
+  name: string,
+  data: Uint8Array,
+): Promise<void> {
+  const handle = await dir.getFileHandle(name, { create: true });
+  const writable = await handle.createWritable();
+  await writable.write(data as unknown as BufferSource);
+  await writable.close();
+}
+
+async function runSongImport(): Promise<void> {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'audio/*';
+  input.multiple = true;
+  input.onchange = async () => {
+    const files = [...(input.files ?? [])];
+    if (!files.length) return;
+    showToast(`正在解析 ${files.length} 个音频文件…`);
+    const playlistInput = window.prompt(
+      '歌单/风格（同名的歌曲归入同一个歌单）：',
+      localStorage.getItem('ks-playlist') ?? '',
+    );
+    const playlist = (playlistInput ?? '').trim() || '未分类';
+    localStorage.setItem('ks-playlist', playlist);
+
+    try {
+      const audioDir = await pickDir('请选择项目的 public/music/audio 文件夹', 'audio');
+      const coversDir = await pickDir('请选择项目的 public/music/covers 文件夹', 'covers');
+      const entriesDir = await pickDir('请选择项目的 src/content/songs 文件夹', 'entries');
+      const existing = await listJsonSlugs(entriesDir);
+      const results: { name: string; ok: boolean; error?: string }[] = [];
+      const encoder = new TextEncoder();
+
+      for (const file of files) {
+        try {
+          const meta = await parseBlob(file);
+          const title =
+            meta.common.title?.trim() || file.name.replace(/\.[^.]+$/, '').trim() || '未知标题';
+          const artist =
+            meta.common.artist?.trim() || meta.common.albumartist?.trim() || '';
+          const extension = (file.name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase() || 'mp3';
+          const picture = meta.common.picture?.[0];
+          const built = buildSongEntry(
+            {
+              title,
+              artist,
+              extension,
+              coverData: picture ? new Uint8Array(picture.data) : undefined,
+              coverFormat: picture?.format,
+            },
+            playlist,
+            existing,
+          );
+          existing.push(built.slug);
+
+          await writeFile(audioDir, built.audioName, new Uint8Array(await file.arrayBuffer()));
+          if (built.coverName && picture) {
+            await writeFile(coversDir, built.coverName, new Uint8Array(picture.data));
+          }
+          await writeFile(
+            entriesDir,
+            `${built.slug}.json`,
+            encoder.encode(`${JSON.stringify(built.entry, null, 2)}\n`),
+          );
+          results.push({ name: file.name, ok: true });
+        } catch (error) {
+          results.push({ name: file.name, ok: false, error: String(error) });
+        }
+      }
+      const okCount = results.filter((result) => result.ok).length;
+      showToast(`导入完成：成功 ${okCount} / ${files.length} 首（歌单「${playlist}」）`);
+      if (okCount < files.length) {
+        console.warn(
+          '[keystatic-helper] 导入失败项：',
+          results.filter((r) => !r.ok),
+        );
+      }
+    } catch (error) {
+      showToast(`导入失败：${String(error)}`);
+    }
+  };
+  input.click();
+}
+
+function installSongImporter(): void {
+  if (typeof (window as unknown as DirectoryPickerWindow).showDirectoryPicker !== 'function') {
+    return;
+  }
+  if (!/^\/keystatic\/collection\/songs\/?$/.test(location.pathname)) return;
+  const btn = document.createElement('button');
+  btn.id = 'ks-import-btn';
+  btn.className = 'ks-import-btn';
+  btn.type = 'button';
+  btn.textContent = '导入歌曲（自动识别作者/封面）';
+  btn.addEventListener('click', () => void runSongImport());
   document.documentElement.appendChild(btn);
 }
 
@@ -319,6 +508,7 @@ function init(): void {
   installLargeFileGuard();
   installSaveFeedback();
   installPreviewButton();
+  installSongImporter();
   let scanTimer: number | undefined;
   const scan = () => {
     translateUI();
