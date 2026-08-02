@@ -666,12 +666,12 @@ html[data-theme="dark"] .icon-moon {
 .anim-pop-in {
   animation: pop-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.reveal {
+.js .reveal {
   opacity: 0;
   transform: translateY(26px);
   transition: opacity 0.45s ease, transform 0.45s ease;
 }
-.reveal.revealed {
+.js .reveal.revealed {
   opacity: 1;
   transform: none;
 }

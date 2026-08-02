@@ -201,6 +201,7 @@ const bgStyle = bgImage
     <script is:inline>
       // 滚动显现动画（替代 framer-motion 的 whileInView）
       const observeReveals = () => {
+        document.documentElement.classList.add('js');
         const els = document.querySelectorAll('.reveal');
         if (!('IntersectionObserver' in window)) {
           els.forEach((el) => el.classList.add('revealed'));
