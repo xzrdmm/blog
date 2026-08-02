@@ -7,8 +7,10 @@
 import { parseBlob } from 'music-metadata';
 
 const FIELD_LABELS = new Set(['封面', '音频文件', '歌词字幕']);
-// 超过该大小的文件不让 Keystatic 读取（读取大文件会导致页面卡死/崩溃）
-const MAX_ADMIN_FILE_SIZE = 15 * 1024 * 1024;
+// 超过该大小的文件不让 Keystatic 读取（Keystatic 读取大文件会严重卡顿）
+const MAX_ADMIN_FILE_SIZE = 1 * 1024 * 1024;
+// 已解析过元数据的文件，避免 React 重渲染后重复解析大文件导致卡顿
+const autofilledSources = new Set<string>();
 
 // 官方 zh-CN 翻译的修正与补充
 const UI_TRANSLATIONS: Record<string, string> = {
@@ -131,7 +133,7 @@ function installLargeFileGuard(): void {
       if (input?.type === 'file' && file && file.size > MAX_ADMIN_FILE_SIZE) {
         event.stopImmediatePropagation();
         showToast(
-          `「${file.name}」(${(file.size / 1024 / 1024).toFixed(1)}MB) 超过后台上传上限 15MB，` +
+          `「${file.name}」(${(file.size / 1024 / 1024).toFixed(1)}MB) 超过后台上传上限 1MB，` +
             '为避免页面崩溃，请改用批量导入：npm run music:import -- <文件夹> <歌单名>',
         );
       }
@@ -163,9 +165,9 @@ const target = ({
   document.documentElement.appendChild(btn);
 }
 
-function translateUI(): void {
+function translateUI(selector = 'button, h1, h2, h3, h4, [role="menuitem"]'): void {
   for (const el of document.querySelectorAll<HTMLElement>(
-    'button, h1, h2, h3, h4, span, label, a, div',
+    selector,
   )) {
     if (el.closest('.ks-chip, #ks-toast')) continue;
     // 只翻译纯文本叶子节点，避免破坏包含按钮/控件的容器结构
@@ -223,25 +225,25 @@ function setInputValue(input: HTMLInputElement, value: string): void {
 }
 
 async function autofillFromAudio(download: HTMLAnchorElement | HTMLButtonElement): Promise<void> {
-  if (download.dataset.ksAutofilled === '1') return;
+  const href = download instanceof HTMLAnchorElement ? download.href : '';
+  if (!href || autofilledSources.has(href)) return;
+  autofilledSources.add(href);
   download.dataset.ksAutofilled = '1';
   try {
-    const href = download instanceof HTMLAnchorElement ? download.href : '';
-    if (!href) return;
     const blob = await (await fetch(href, { signal: AbortSignal.timeout(8000) })).blob();
-    // 超大文件跳过元数据解析，避免内存压力导致页面卡死
-    if (blob.size > 100 * 1024 * 1024) return;
+    // 超过 8MB 跳过自动解析，避免大文件拖慢页面（可手动填写）
+    if (blob.size > 8 * 1024 * 1024) return;
     const meta = await parseBlob(blob);
     const title = meta.common.title?.trim();
     const artist = meta.common.artist?.trim();
     if (title) {
-      // 每次设置前实时查询，避免 React 重渲染后引用失效
+      // 每次设置前实时查询，避免 React 重渲染后引用失效；值相同则跳过
       const input = inputForLabel('歌名') ?? fallbackInputs()[0];
-      if (input) setInputValue(input, title);
+      if (input && input.value !== title) setInputValue(input, title);
     }
     if (artist) {
       const input = inputForLabel('歌手/艺术家') ?? fallbackInputs()[2];
-      if (input) setInputValue(input, artist);
+      if (input && input.value !== artist) setInputValue(input, artist);
     }
   } catch {
     // 元数据解析失败时静默忽略，用户可手动填写
@@ -333,6 +335,8 @@ function init(): void {
   };
   // 延后到 React 水合完成后再开始修改 DOM，避免水合不匹配
   window.setTimeout(() => {
+    // 首次全量翻译（覆盖列表计数、空状态等 div/span 文本）
+    translateUI('button, h1, h2, h3, h4, span, label, a, div');
     scan();
   }, 1200);
   const bodyObserver = new MutationObserver(scheduleScan);
