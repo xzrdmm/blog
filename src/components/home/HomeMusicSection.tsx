@@ -35,7 +35,7 @@ export default function HomeMusicSection({ songs }: Props) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.4, delay: (i % 3) * 0.08, ease: 'easeOut' }}
-            className="glass flex flex-col gap-3 rounded-2xl p-4 text-left transition-transform duration-200 hover:-translate-y-1"
+            className="glass card-hover flex flex-col gap-3 rounded-2xl p-4 text-left"
           >
             <div className="flex items-center gap-3">
               {song.cover ? (

@@ -29,7 +29,7 @@ export default function HomeMasonry({ posts, base }: Props) {
         <motion.article
           key={post.id}
           {...fadeUp}
-          className="glass flex h-full flex-col overflow-hidden rounded-2xl"
+          className="glass card-hover flex h-full flex-col overflow-hidden rounded-2xl"
         >
           {post.cover && (
             <img src={post.cover} alt={post.title} loading="lazy" className="aspect-video w-full object-cover" />

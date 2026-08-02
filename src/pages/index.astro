@@ -11,6 +11,7 @@ import { filterPublished, sortByDateDesc, sortPosts } from '../lib/posts';
 import {
   curateFeaturedPosts,
   curateFeaturedSongs,
+  curatePlayerSongs,
 } from '../lib/homepage';
 import { assetPath } from '../lib/paths';
 import { makeExcerpt } from '../lib/content';
@@ -23,8 +24,9 @@ const chatters = sortByDateDesc(
 const songs = (await getCollection('songs')).filter((song) => !song.data.draft);
 const base = import.meta.env.BASE_URL;
 
-// 主页歌单：全部已发布歌曲用于播放器；精选歌曲用于音乐板块
-const heroSongProps = songs.map((song) => ({
+// 主页播放器：自定义播放列表 > 指定歌单 > 全部已发布歌曲
+const playerSongs = curatePlayerSongs(songs, siteConfig.playerSongs, siteConfig.playerPlaylist);
+const heroSongProps = playerSongs.map((song) => ({
   id: song.id,
   title: song.data.title,
   artist: song.data.artist,

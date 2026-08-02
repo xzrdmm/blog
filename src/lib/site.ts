@@ -15,6 +15,8 @@ export interface SiteConfig {
   enableAurora: boolean;
   featuredPosts: string[];
   featuredSongs: string[];
+  playerSongs: string[];
+  playerPlaylist: string;
   goatcounterSite: string;
   bgImages: string[];
 }
@@ -49,6 +51,8 @@ export const siteConfig: SiteConfig = {
   enableAurora: bool(raw.enableAurora, true),
   featuredPosts: strArr(raw.featuredPosts),
   featuredSongs: strArr(raw.featuredSongs),
+  playerSongs: strArr(raw.playerSongs),
+  playerPlaylist: str(raw.playerPlaylist),
   goatcounterSite: str(raw.goatcounterSite),
   bgImages: strArr(raw.bgImages),
 };

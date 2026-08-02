@@ -10,7 +10,7 @@ const { chatter } = Astro.props;
 const { Content } = await render(chatter);
 ---
 
-<article class="chatter-card glass">
+<article class="chatter-card glass card-hover">
   <div class="meta">
     <time datetime={chatter.data.date.toISOString()}>{formatDate(chatter.data.date)}</time>
   </div>

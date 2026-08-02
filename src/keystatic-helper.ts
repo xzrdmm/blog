@@ -6,6 +6,7 @@
  */
 import { parseBlob } from 'music-metadata';
 import { buildSongEntry } from './lib/import-entry';
+import { parsePostFrontmatter } from './lib/content';
 
 const FIELD_LABELS = new Set(['封面', '音频文件', '歌词字幕']);
 // 超过该大小的文件不让 Keystatic 读取（Keystatic 读取大文件会严重卡顿）
@@ -136,6 +137,57 @@ function injectStyles(): void {
     }
     .ks-import-btn:hover {
       transform: translateY(-2px);
+    }
+    .ks-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      box-shadow: 0 8px 24px rgba(30, 20, 60, 0.12);
+      font-size: 13px;
+      color: #2a2a3e;
+      max-width: 940px;
+    }
+    .ks-filter-label {
+      color: #6b6b84;
+      white-space: nowrap;
+    }
+    .ks-filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ks-chip-btn {
+      border: 1px solid rgba(124, 108, 246, 0.32);
+      background: transparent;
+      color: #5b5b74;
+      border-radius: 999px;
+      padding: 3px 11px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .ks-chip-btn:hover {
+      border-color: #7c6cf6;
+      color: #7c6cf6;
+    }
+    .ks-chip-btn.active {
+      background: #7c6cf6;
+      border-color: #7c6cf6;
+      color: #fff;
+    }
+    .ks-filter-sort {
+      border: 1px solid rgba(124, 108, 246, 0.32);
+      border-radius: 8px;
+      background: #fff;
+      color: #2a2a3e;
+      padding: 4px 8px;
+      font-size: 12px;
     }
   `;
   document.head.appendChild(style);
@@ -725,6 +777,204 @@ function installPhotoImporter(): void {
   document.documentElement.appendChild(btn);
 }
 
+interface FilterEntryMeta {
+  slug: string;
+  filterValues: string[];
+  sortValues: Record<string, string>;
+}
+
+async function fetchTree(): Promise<{ path: string; sha: string }[]> {
+  // Keystatic 本地 API 需要这个自定义头才返回数据（官方客户端就是这么请求的）
+  const res = await fetch('/api/keystatic/tree', { headers: { 'no-cors': '1' } });
+  if (!res.ok) return [];
+  return (await res.json()) as { path: string; sha: string }[];
+}
+
+async function fetchBlob(sha: string, path: string): Promise<string> {
+  const res = await fetch(`/api/keystatic/blob/${sha}/${encodeURI(path)}`, {
+    headers: { 'no-cors': '1' },
+  });
+  if (!res.ok) throw new Error(`blob ${path}`);
+  return res.text();
+}
+
+async function collectFilterMeta(
+  kind: 'posts' | 'songs',
+): Promise<Map<string, FilterEntryMeta>> {
+  const tree = await fetchTree();
+  const prefix = `src/content/${kind}/`;
+  const files = tree.filter(
+    (file) =>
+      file.path.startsWith(prefix) &&
+      (kind === 'posts' ? /\.(md|mdoc)$/.test(file.path) : file.path.endsWith('.json')),
+  );
+  const meta = new Map<string, FilterEntryMeta>();
+  await Promise.all(
+    files.map(async (file) => {
+      const slug = file.path.slice(prefix.length).replace(/\.(md|mdoc|json)$/, '');
+      try {
+        const text = await fetchBlob(file.sha, file.path);
+        if (kind === 'posts') {
+          const parsed = parsePostFrontmatter(text);
+          meta.set(slug, {
+            slug,
+            filterValues: parsed.tags,
+            sortValues: { date: parsed.date, title: parsed.title || slug, artist: '', playlist: '' },
+          });
+        } else {
+          const data = JSON.parse(text) as {
+            title?: string;
+            artist?: string;
+            playlist?: string;
+          };
+          meta.set(slug, {
+            slug,
+            filterValues: data.playlist ? [data.playlist] : [],
+            sortValues: {
+              date: '',
+              title: data.title || slug,
+              artist: data.artist || '',
+              playlist: data.playlist || '',
+            },
+          });
+        }
+      } catch {
+        // 读取失败的条目保留默认显示
+      }
+    }),
+  );
+  return meta;
+}
+
+function slugOfRow(row: Element): string {
+  return row.querySelector('[role="rowheader"]')?.textContent?.trim() ?? '';
+}
+
+function installCollectionFilter(): void {
+  const match = location.pathname.match(/^\/keystatic\/collection\/(posts|songs)\/?$/);
+  const existing = document.getElementById('ks-filter-bar');
+  if (!match) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
+  const kind = match[1] as 'posts' | 'songs';
+
+  void (async () => {
+    const meta = await collectFilterMeta(kind);
+    let grid: Element | undefined;
+    let rowsHost: HTMLElement | null = null;
+    let rows: HTMLElement[] = [];
+    for (let attempt = 0; attempt < 30; attempt++) {
+      grid = [...document.querySelectorAll('div[role="grid"]')].find(
+        (el) => el.querySelectorAll('div[role="row"]').length > 1,
+      );
+      // 只取 grid 直接子级的 rowgroup（表头外层还有一个嵌套的 rowgroup，不能匹配）
+      const rowGroup = [...(grid?.children ?? [])].find(
+        (child) => child.getAttribute('role') === 'rowgroup',
+      );
+      // 数据行实际放在 rowgroup 内的 presentation 容器里
+      rowsHost =
+        (rowGroup?.querySelector<HTMLElement>('div[role="presentation"]') as HTMLElement | null) ??
+        (rowGroup as HTMLElement | null);
+      rows = rowsHost
+        ? [...rowsHost.querySelectorAll<HTMLElement>('div[role="row"]')]
+        : [];
+      if (grid?.parentElement && rowsHost && rows.length > 0) break;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+    if (!grid?.parentElement || !rowsHost || rows.length === 0) return;
+    if (document.getElementById('ks-filter-bar')) return;
+
+    const values = [...new Set([...meta.values()].flatMap((m) => m.filterValues))].sort((a, b) =>
+      a.localeCompare(b, 'zh-CN'),
+    );
+    const bar = document.createElement('div');
+    bar.id = 'ks-filter-bar';
+    bar.className = 'ks-filter-bar';
+    bar.dataset.kind = kind;
+    const filterLabel = kind === 'posts' ? '标签' : '歌单';
+    const options =
+      kind === 'posts'
+        ? [
+            ['date-desc', '日期新 → 旧'],
+            ['date-asc', '日期旧 → 新'],
+            ['title', '标题 A → Z'],
+          ]
+        : [
+            ['title', '歌名 A → Z'],
+            ['artist', '歌手 A → Z'],
+            ['playlist', '歌单 A → Z'],
+          ];
+    bar.innerHTML = `
+      <span class="ks-filter-label">${filterLabel}：</span>
+      <div class="ks-filter-chips">
+        <button type="button" class="ks-chip-btn active" data-value="">全部</button>
+        ${values
+          .map(
+            (value) =>
+              `<button type="button" class="ks-chip-btn" data-value="${value.replace(/"/g, '&quot;')}">${value}</button>`,
+          )
+          .join('')}
+      </div>
+      <span class="ks-filter-label">排序：</span>
+      <select class="ks-filter-sort">
+        ${options.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+      </select>
+    `;
+
+    let filterValue = '';
+    const apply = () => {
+      const sortValue =
+        (bar.querySelector('.ks-filter-sort') as HTMLSelectElement | null)?.value ?? 'title';
+      const items = rows
+        .map((row) => ({ row, slug: slugOfRow(row), entry: meta.get(slugOfRow(row)) }))
+        .filter((item) => {
+          if (!filterValue) return true;
+          return item.entry?.filterValues.includes(filterValue) ?? true;
+        });
+      const sortKey = (item: (typeof items)[number]): string => {
+        if (sortValue === 'artist') return item.entry?.sortValues.artist ?? '';
+        if (sortValue === 'playlist') return item.entry?.sortValues.playlist ?? '';
+        if (sortValue === 'date-asc' || sortValue === 'date-desc')
+          return item.entry?.sortValues.date ?? '';
+        return item.entry?.sortValues.title ?? '';
+      };
+      items.sort((a, b) => {
+        if (sortValue === 'date-desc') {
+          return String(b.entry?.sortValues.date ?? '').localeCompare(
+            String(a.entry?.sortValues.date ?? ''),
+          );
+        }
+        if (sortValue === 'date-asc') {
+          return String(a.entry?.sortValues.date ?? '').localeCompare(
+            String(b.entry?.sortValues.date ?? ''),
+          );
+        }
+        return sortKey(a).localeCompare(sortKey(b), 'zh-CN');
+      });
+      rows.forEach((row) => {
+        row.style.display = items.some((item) => item.row === row) ? '' : 'none';
+      });
+      rowsHost.append(...items.map((item) => item.row));
+    };
+
+    bar.querySelectorAll('.ks-chip-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterValue = (btn as HTMLButtonElement).dataset.value ?? '';
+        bar.querySelectorAll('.ks-chip-btn').forEach((b) => {
+          b.classList.toggle('active', b === btn);
+        });
+        apply();
+      });
+    });
+    bar.querySelector('.ks-filter-sort')?.addEventListener('change', apply);
+
+    grid.parentElement.insertBefore(bar, grid);
+    apply();
+  })();
+}
+
 function translateUI(selector = 'button, h1, h2, h3, h4, [role="menuitem"]'): void {
   for (const el of document.querySelectorAll<HTMLElement>(
     selector,
@@ -888,6 +1138,7 @@ function init(): void {
   installPreviewButton();
   installSongImporter();
   installPhotoImporter();
+  installCollectionFilter();
   installSaveRepair();
   let scanTimer: number | undefined;
   const scan = () => {
@@ -895,6 +1146,7 @@ function init(): void {
     installPreviewButton();
     installSongImporter();
     installPhotoImporter();
+    installCollectionFilter();
     for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
       const text = button.textContent?.trim();
       if (text === 'Choose file' || text === '选择文件') {

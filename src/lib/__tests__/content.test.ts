@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeExcerpt, stripMarkdown } from '../content';
+import { makeExcerpt, parsePostFrontmatter, stripMarkdown } from '../content';
 
 describe('stripMarkdown', () => {
   it('removes emphasis markers', () => {
@@ -49,5 +49,40 @@ describe('makeExcerpt', () => {
 
   it('returns empty string for empty input', () => {
     expect(makeExcerpt('', 20)).toBe('');
+  });
+});
+
+describe('parsePostFrontmatter', () => {
+  it('parses title, date and inline tags array', () => {
+    const text = `---
+title: "我的第一篇文章"
+date: 2026-08-01
+tags: [技术, 生活]
+draft: false
+---
+
+正文内容`;
+    expect(parsePostFrontmatter(text)).toEqual({
+      title: '我的第一篇文章',
+      date: '2026-08-01',
+      tags: ['技术', '生活'],
+    });
+  });
+
+  it('parses tags in list form', () => {
+    const text = `---
+title: 列表标签
+date: 2026-07-30
+tags:
+  - 摄影
+  - 随笔
+---
+
+内容`;
+    expect(parsePostFrontmatter(text).tags).toEqual(['摄影', '随笔']);
+  });
+
+  it('returns empty defaults when frontmatter is missing', () => {
+    expect(parsePostFrontmatter('只有正文')).toEqual({ title: '', date: '', tags: [] });
   });
 });

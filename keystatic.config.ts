@@ -263,6 +263,18 @@ export default config({
             itemLabel: (props) => props.value || '选择歌曲',
           },
         ),
+        playerSongs: fields.array(
+          fields.relationship({ label: '选择歌曲', collection: 'songs' }),
+          {
+            label: '播放器自定义播放列表',
+            description: '逐首指定主页播放器的播放顺序；优先于下方歌单，留空则按歌单/全部播放。',
+            itemLabel: (props) => props.value || '选择歌曲',
+          },
+        ),
+        playerPlaylist: fields.text({
+          label: '播放器默认歌单',
+          description: '只填歌单名（如 日语、电子），主页播放器只播这个歌单；留空则播放全部歌曲。',
+        }),
         goatcounterSite: fields.text({
           label: 'GoatCounter 站点 ID',
           description: '可选：填入后启用访问统计（https://www.goatcounter.com），例如 my-blog。',
