@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { formatClock, greeting } from '../../lib/clock';
 import MusicPlayer, { type SongItem } from '../music/MusicPlayer';
@@ -26,12 +25,7 @@ export default function HeroPanel({ songs }: Props) {
     : '';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-      className="glass flex flex-col gap-4 rounded-2xl p-4 sm:p-5"
-    >
+    <div className="glass anim-fade-up flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
       <div className="flex items-end justify-between gap-4">
         <div>
           <div className="font-mono text-3xl font-bold tracking-tight text-[var(--text)] tabular-nums sm:text-4xl">
@@ -44,6 +38,6 @@ export default function HeroPanel({ songs }: Props) {
         </div>
       </div>
       <MusicPlayer songs={songs} bare />
-    </motion.div>
+    </div>
   );
 }

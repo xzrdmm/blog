@@ -342,8 +342,20 @@ img {
   .post-card,
   .btn,
   .card-hover,
-  .card-hover img {
+  .card-hover img,
+  .anim-fade-up,
+  .anim-fade-in,
+  .anim-pop-in,
+  .reveal {
     transition: none;
+  }
+  .anim-fade-up,
+  .anim-fade-in,
+  .anim-pop-in,
+  .reveal {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
   }
   .card-hover:hover {
     transform: none;
@@ -612,6 +624,56 @@ html[data-theme="dark"] .icon-moon {
 
 .card-hover:hover img {
   transform: scale(1.045);
+}
+
+/* ============ 入场/滚动显现动画（替代 framer-motion） ============ */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.anim-fade-up {
+  animation: fade-up 0.45s ease-out both;
+}
+.anim-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+.anim-pop-in {
+  animation: pop-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
 }
 
 /* ============ 轮播（说说） ============ */

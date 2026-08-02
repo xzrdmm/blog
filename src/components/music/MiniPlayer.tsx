@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { audioStore } from '../../lib/audio-store';
 
@@ -41,15 +40,9 @@ export default function MiniPlayer() {
   const progress = state.duration > 0 ? Math.min(100, (state.currentTime / state.duration) * 100) : 0;
 
   return (
-    <AnimatePresence>
+    <>
       {track && (
-        <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.92 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-          className="widget-glass widget-layer right-5 bottom-5 z-[90] w-[300px] max-w-[calc(100vw-40px)] rounded-2xl p-3"
-        >
+        <div className="widget-glass widget-layer anim-pop-in right-5 bottom-5 z-[90] w-[300px] max-w-[calc(100vw-40px)] rounded-2xl p-3">
           <div className="flex items-center gap-3">
             {track.cover ? (
               <img src={track.cover} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
@@ -104,8 +97,8 @@ export default function MiniPlayer() {
               <span>{formatTime(state.duration)}</span>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { audioStore } from '../../lib/audio-store';
 import { buildTrack } from '../../lib/track';
 
@@ -22,20 +21,16 @@ interface Props {
 export default function HomeMusicSection({ songs }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {songs.map((song, i) => {
+      {songs.map((song) => {
         const stars = Number(song.rating) || 0;
         return (
-          <motion.button
+          <button
             key={song.id}
             type="button"
             onClick={() => {
               if (song.audio) audioStore.play(buildTrack(song));
             }}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.4, delay: (i % 3) * 0.08, ease: 'easeOut' }}
-            className="glass card-hover flex flex-col gap-3 rounded-2xl p-4 text-left"
+            className="glass card-hover reveal flex flex-col gap-3 rounded-2xl p-4 text-left"
           >
             <div className="flex items-center gap-3">
               {song.cover ? (
@@ -60,7 +55,7 @@ export default function HomeMusicSection({ songs }: Props) {
               </span>
             </div>
             {song.review && <p className="line-clamp-2 text-xs text-[var(--text-2)]">{song.review}</p>}
-          </motion.button>
+          </button>
         );
       })}
     </div>

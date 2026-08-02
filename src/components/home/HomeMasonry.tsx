@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { formatDate } from '../../lib/format';
 
 export interface MasonryPostItem {
@@ -15,21 +14,13 @@ interface Props {
   base: string;
 }
 
-const fadeUp = {
-  initial: { opacity: 0, y: 26 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.45, ease: 'easeOut' as const },
-};
-
 export default function HomeMasonry({ posts, base }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:1fr]">
       {posts.map((post) => (
-        <motion.article
+        <article
           key={post.id}
-          {...fadeUp}
-          className="glass card-hover flex h-full flex-col overflow-hidden rounded-2xl"
+          className="glass card-hover reveal flex h-full flex-col overflow-hidden rounded-2xl"
         >
           {post.cover && (
             <img src={post.cover} alt={post.title} loading="lazy" className="aspect-video w-full object-cover" />
@@ -56,7 +47,7 @@ export default function HomeMasonry({ posts, base }: Props) {
               </div>
             )}
           </div>
-        </motion.article>
+        </article>
       ))}
     </div>
   );
