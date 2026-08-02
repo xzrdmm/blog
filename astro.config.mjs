@@ -12,7 +12,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // https://<你的 GitHub 用户名>.github.io/blog/
 export default defineConfig({
   output: 'static',
-  site: 'https://your-username.github.io/blog/',
+  site: 'https://xzrdmm.github.io/blog/',
   // 开发环境使用根路径（/keystatic 可直接访问）；
   // 生产构建保持 /blog/ 以匹配 GitHub Pages 项目站点。
   base: isProduction ? '/blog/' : '/',
