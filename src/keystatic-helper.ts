@@ -267,6 +267,27 @@ async function writeFile(
 }
 
 async function runSongImport(): Promise<void> {
+  // showDirectoryPicker 必须在用户手势内调用，所以先选目录、再选文件
+  let audioDir: FileSystemDirectoryHandle;
+  let coversDir: FileSystemDirectoryHandle;
+  let entriesDir: FileSystemDirectoryHandle;
+  try {
+    audioDir = await pickDir('请选择项目的 public/music/audio 文件夹', 'audio');
+    coversDir = await pickDir('请选择项目的 public/music/covers 文件夹', 'covers');
+    entriesDir = await pickDir('请选择项目的 src/content/songs 文件夹', 'entries');
+  } catch (error) {
+    showToast(`选择目录失败：${String(error)}`);
+    return;
+  }
+
+  const existing = await listJsonSlugs(entriesDir);
+  const playlistInput = window.prompt(
+    '歌单/风格（同名的歌曲归入同一个歌单）：',
+    localStorage.getItem('ks-playlist') ?? '',
+  );
+  const playlist = (playlistInput ?? '').trim() || '未分类';
+  localStorage.setItem('ks-playlist', playlist);
+
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'audio/*';
@@ -275,18 +296,8 @@ async function runSongImport(): Promise<void> {
     const files = [...(input.files ?? [])];
     if (!files.length) return;
     showToast(`正在解析 ${files.length} 个音频文件…`);
-    const playlistInput = window.prompt(
-      '歌单/风格（同名的歌曲归入同一个歌单）：',
-      localStorage.getItem('ks-playlist') ?? '',
-    );
-    const playlist = (playlistInput ?? '').trim() || '未分类';
-    localStorage.setItem('ks-playlist', playlist);
 
     try {
-      const audioDir = await pickDir('请选择项目的 public/music/audio 文件夹', 'audio');
-      const coversDir = await pickDir('请选择项目的 public/music/covers 文件夹', 'covers');
-      const entriesDir = await pickDir('请选择项目的 src/content/songs 文件夹', 'entries');
-      const existing = await listJsonSlugs(entriesDir);
       const results: { name: string; ok: boolean; error?: string }[] = [];
       const encoder = new TextEncoder();
 
