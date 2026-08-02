@@ -208,6 +208,19 @@ img {
   transform: translateY(-1px);
 }
 
+button.tag-chip {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+
+.tag-chip.tag-chip-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
 .meta {
   color: var(--text-2);
   font-size: 0.88rem;
