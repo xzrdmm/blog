@@ -352,6 +352,21 @@ async function runSongImport(): Promise<void> {
             `${built.slug}.json`,
             encoder.encode(`${JSON.stringify(built.entry, null, 2)}\n`),
           );
+          // 写后自检：确认 audio/cover 写入成功，防止被后台/缓存重写时丢字段
+          try {
+            const checkHandle = await entriesDir.getFileHandle(`${built.slug}.json`);
+            const checkFile = await checkHandle.getFile();
+            const checkText = await checkFile.text();
+            if (!checkText.includes('"audio"') || !checkText.includes('"cover"')) {
+              await writeFile(
+                entriesDir,
+                `${built.slug}.json`,
+                encoder.encode(`${JSON.stringify(built.entry, null, 2)}\n`),
+              );
+            }
+          } catch {
+            // 自检失败时忽略，下一轮导入会重新写入
+          }
           results.push({ name: file.name, ok: true });
         } catch (error) {
           results.push({ name: file.name, ok: false, error: String(error) });
