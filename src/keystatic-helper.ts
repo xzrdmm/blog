@@ -233,8 +233,8 @@ async function idbSet(key: string, handle: FileSystemDirectoryHandle): Promise<v
   }
 }
 
-async function pickDir(label: string, key: string): Promise<FileSystemDirectoryHandle> {
-  const stored = await idbGet(key);
+async function pickProjectRoot(): Promise<FileSystemDirectoryHandle> {
+  const stored = await idbGet('root');
   if (stored) {
     const permissioned = stored as PermissionedDirectoryHandle;
     if ((await permissioned.queryPermission?.({ mode: 'readwrite' })) === 'granted') return stored;
@@ -243,8 +243,24 @@ async function pickDir(label: string, key: string): Promise<FileSystemDirectoryH
   const picker = window as unknown as DirectoryPickerWindow;
   const dir = await picker.showDirectoryPicker?.({ mode: 'readwrite' });
   if (!dir) throw new Error('未选择目录');
-  await idbSet(key, dir);
+  await idbSet('root', dir);
   return dir;
+}
+
+async function resolveDir(
+  root: FileSystemDirectoryHandle,
+  path: string,
+): Promise<FileSystemDirectoryHandle> {
+  let current = root;
+  for (const part of path.split('/')) {
+    if (!part) continue;
+    current = await current.getDirectoryHandle(part, { create: true });
+  }
+  return current;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 async function listJsonSlugs(dir: FileSystemDirectoryHandle): Promise<string[]> {
@@ -268,17 +284,21 @@ async function writeFile(
 
 async function runSongImport(): Promise<void> {
   // showDirectoryPicker 必须在用户手势内调用，所以先选目录、再选文件
-  let audioDir: FileSystemDirectoryHandle;
-  let coversDir: FileSystemDirectoryHandle;
-  let entriesDir: FileSystemDirectoryHandle;
+  let root: FileSystemDirectoryHandle;
   try {
-    audioDir = await pickDir('请选择项目的 public/music/audio 文件夹', 'audio');
-    coversDir = await pickDir('请选择项目的 public/music/covers 文件夹', 'covers');
-    entriesDir = await pickDir('请选择项目的 src/content/songs 文件夹', 'entries');
+    showToast('请选择博客项目根目录（例如 D:\\new\\blog）');
+    root = await pickProjectRoot();
   } catch (error) {
+    if (isAbortError(error)) {
+      showToast('已取消导入');
+      return;
+    }
     showToast(`选择目录失败：${String(error)}`);
     return;
   }
+  const audioDir = await resolveDir(root, 'public/music/audio');
+  const coversDir = await resolveDir(root, 'public/music/covers');
+  const entriesDir = await resolveDir(root, 'src/content/songs');
 
   const existing = await listJsonSlugs(entriesDir);
   const playlistInput = window.prompt(
