@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentLineIndex, parseLrc } from '../lrc';
+import { centerScrollTop, currentLineIndex, parseLrc } from '../lrc';
 
 describe('parseLrc', () => {
   it('parses mm:ss.xx timestamps', () => {
@@ -59,5 +59,20 @@ describe('currentLineIndex', () => {
 
   it('returns -1 for empty lines', () => {
     expect(currentLineIndex([], 5)).toBe(-1);
+  });
+});
+
+describe('centerScrollTop', () => {
+  it('centers the line inside the container', () => {
+    expect(centerScrollTop(100, 200, 20)).toBe(10);
+  });
+
+  it('clamps to the top when the line is near the start', () => {
+    expect(centerScrollTop(0, 200, 20)).toBe(0);
+    expect(centerScrollTop(40, 200, 20)).toBe(0);
+  });
+
+  it('keeps scrolling below the fold for later lines', () => {
+    expect(centerScrollTop(500, 200, 20)).toBe(410);
   });
 });

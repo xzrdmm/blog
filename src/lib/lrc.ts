@@ -31,3 +31,15 @@ export function currentLineIndex(lines: LyricLine[], time: number): number {
   }
   return index;
 }
+
+/**
+ * 计算把某一行歌词在容器内垂直居中的滚动位置。
+ * 只作用于歌词容器自身，避免 scrollIntoView 把页面一起滚走。
+ */
+export function centerScrollTop(
+  lineOffsetTop: number,
+  containerHeight: number,
+  lineHeight: number,
+): number {
+  return Math.max(0, lineOffsetTop - containerHeight / 2 + lineHeight / 2);
+}

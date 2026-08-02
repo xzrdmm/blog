@@ -1,6 +1,6 @@
 import { type Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { audioStore, type PlayMode } from '../../lib/audio-store';
-import { currentLineIndex, parseLrc, type LyricLine } from '../../lib/lrc';
+import { centerScrollTop, currentLineIndex, parseLrc, type LyricLine } from '../../lib/lrc';
 import { buildTrack } from '../../lib/track';
 import { loadPlayerPrefs, savePlayerPrefs } from '../../lib/prefs';
 
@@ -200,9 +200,15 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     lyricMode === 'lrc' && lyrics ? currentLineIndex(lyrics, displayState.currentTime) : -1;
 
   useEffect(() => {
-    if (activeIndex >= 0) {
-      activeLineRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
+    if (activeIndex < 0) return;
+    const line = activeLineRef.current;
+    const container = line?.parentElement;
+    if (!line || !container) return;
+    // 只滚动歌词容器自身，不带动页面滚动条
+    container.scrollTo({
+      top: centerScrollTop(line.offsetTop, container.clientHeight, line.clientHeight),
+      behavior: 'smooth',
+    });
   }, [activeIndex]);
 
   if (songs.length === 0) {
@@ -318,7 +324,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
       <div>
         <div className="mb-2 text-xs font-medium tracking-widest text-[var(--text-3)] uppercase">歌词</div>
         {lyrics && lyrics.length > 0 ? (
-          <div className="relative h-32 overflow-y-auto rounded-xl bg-black/25 px-4 py-2">
+          <div className="relative h-32 overflow-y-auto overscroll-contain rounded-xl bg-black/25 px-4 py-2">
             {lyrics.map((line, i) => (
               <div
                 key={i}

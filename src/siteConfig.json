@@ -17,5 +17,7 @@
   "enableAurora": true,
   "featuredPosts": [],
   "featuredSongs": [],
+  "playerSongs": [],
+  "playerPlaylist": "日语",
   "bgImages": []
 }
