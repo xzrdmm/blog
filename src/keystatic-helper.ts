@@ -125,11 +125,12 @@ function injectStyles(): void {
       z-index: 9998;
       padding: 9px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(167, 139, 250, 0.4);
-      background: rgba(30, 20, 60, 0.92);
-      color: #e9e4ff;
+      border: none;
+      background: linear-gradient(135deg, #7c6cf6, #38bdf8);
+      color: #fff;
       font-size: 13px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       transition: transform 0.15s ease;
     }
@@ -341,16 +342,19 @@ async function runSongImport(): Promise<void> {
 }
 
 function installSongImporter(): void {
-  if (typeof (window as unknown as DirectoryPickerWindow).showDirectoryPicker !== 'function') {
-    return;
-  }
   if (!/^\/keystatic\/collection\/songs\/?$/.test(location.pathname)) return;
   const btn = document.createElement('button');
   btn.id = 'ks-import-btn';
   btn.className = 'ks-import-btn';
   btn.type = 'button';
   btn.textContent = '导入歌曲（自动识别作者/封面）';
-  btn.addEventListener('click', () => void runSongImport());
+  btn.addEventListener('click', () => {
+    if (typeof (window as unknown as DirectoryPickerWindow).showDirectoryPicker !== 'function') {
+      showToast('当前浏览器不支持直接导入，请用 Chrome / Edge 打开后台，或使用命令行：npm run music:import');
+      return;
+    }
+    void runSongImport();
+  });
   document.documentElement.appendChild(btn);
 }
 
