@@ -120,7 +120,7 @@ function injectStyles(): void {
     }
     .ks-import-btn {
       position: fixed;
-      bottom: 40px;
+      top: 64px;
       right: 16px;
       z-index: 9998;
       padding: 9px 14px;
