@@ -49,6 +49,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     : {
         track: null,
         playing: false,
+        pendingAutoplay: false,
         currentTime: 0,
         duration: 0,
         volume: 1,
@@ -58,22 +59,24 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
         queue: [],
       };
 
+  // 首次进入：恢复播放偏好（音量/模式/上次歌曲），并自动开始播放
   useEffect(() => {
     const current = audioStore.state.track;
     if (current && songs.some((song) => song.id === current.id)) return;
-    const first = songs.find((song) => song.audio);
-    if (first) audioStore.select(buildTrack(first));
-  }, [songs]);
-
-  // 恢复播放偏好（音量/模式/上次歌曲），并监听变化保存
-  useEffect(() => {
     const prefs = loadPlayerPrefs(window.localStorage);
     audioStore.setVolume(prefs.volume);
     audioStore.setMode(prefs.mode);
-    if (!audioStore.state.track && prefs.lastSongId) {
-      const last = songs.find((song) => song.id === prefs.lastSongId && song.audio);
-      if (last) audioStore.select(buildTrack(last));
+    let target: SongItem | undefined;
+    if (prefs.lastSongId) {
+      target = songs.find((song) => song.id === prefs.lastSongId && song.audio);
     }
+    target ??= songs.find((song) => song.audio);
+    if (target) audioStore.play(buildTrack(target));
+  }, [songs]);
+
+  // 监听状态变化，保存播放偏好
+  useEffect(() => {
+    lastSavedRef.current = '';
     return audioStore.subscribe(() => {
       const state = audioStore.state;
       const key = `${state.volume}|${state.mode}|${state.track?.id ?? ''}`;
@@ -86,7 +89,7 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
         });
       }
     });
-  }, [songs]);
+  }, []);
 
   const playById = useCallback(
     (id: string) => {
@@ -325,6 +328,12 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
         </button>
         {displayState.error && <span className="text-xs text-rose-400">{displayState.error}</span>}
       </div>
+
+      {displayState.pendingAutoplay && (
+        <div className="rounded-xl bg-amber-400/10 px-4 py-2 text-center text-xs text-amber-300">
+          浏览器拦截了自动播放，点击页面任意位置即可开始播放
+        </div>
+      )}
 
       <div>
         <div className="mb-2 text-xs font-medium tracking-widest text-[var(--text-3)] uppercase">歌词</div>

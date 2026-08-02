@@ -170,4 +170,33 @@ describe('AudioStore', () => {
     store.removeFromQueue(0);
     expect(store.state.queue[0].src).toBe('/b.mp3');
   });
+
+  it('blocked pauses playback and marks pending autoplay', () => {
+    const store = new AudioStore();
+    store.play(track);
+    store.blocked();
+    expect(store.state.playing).toBe(false);
+    expect(store.state.pendingAutoplay).toBe(true);
+    expect(store.state.loading).toBe(false);
+  });
+
+  it('resume restores playback and clears pending autoplay', () => {
+    const store = new AudioStore();
+    store.play(track);
+    store.blocked();
+    store.resume();
+    expect(store.state.playing).toBe(true);
+    expect(store.state.pendingAutoplay).toBe(false);
+  });
+
+  it('play and select reset pending autoplay', () => {
+    const store = new AudioStore();
+    store.play(track);
+    store.blocked();
+    store.select({ ...track, src: '/b.mp3' });
+    expect(store.state.pendingAutoplay).toBe(false);
+    store.blocked();
+    store.play({ ...track, src: '/c.mp3' });
+    expect(store.state.pendingAutoplay).toBe(false);
+  });
 });

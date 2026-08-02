@@ -14,6 +14,8 @@ export type PlayMode = 'order' | 'shuffle' | 'repeat-one';
 export interface AudioState {
   track: Track | null;
   playing: boolean;
+  /** 自动播放被浏览器策略拦截，等待用户首次交互后恢复 */
+  pendingAutoplay: boolean;
   currentTime: number;
   duration: number;
   volume: number;
@@ -32,6 +34,7 @@ export class AudioStore {
   state: AudioState = {
     track: null,
     playing: false,
+    pendingAutoplay: false,
     currentTime: 0,
     duration: 0,
     volume: 1,
@@ -42,11 +45,26 @@ export class AudioStore {
   };
 
   play(track: Track): void {
-    this.setState({ track, playing: true, error: '', loading: true, currentTime: 0, duration: 0 });
+    this.setState({
+      track,
+      playing: true,
+      pendingAutoplay: false,
+      error: '',
+      loading: true,
+      currentTime: 0,
+      duration: 0,
+    });
   }
 
   select(track: Track): void {
-    this.setState({ track, playing: false, error: '', currentTime: 0, duration: 0 });
+    this.setState({
+      track,
+      playing: false,
+      pendingAutoplay: false,
+      error: '',
+      currentTime: 0,
+      duration: 0,
+    });
   }
 
   toggle(): void {
@@ -56,12 +74,18 @@ export class AudioStore {
   }
 
   ended(): void {
-    this.setState({ playing: false });
+    this.setState({ playing: false, pendingAutoplay: false });
     this.endedListeners.forEach((listener) => listener());
   }
 
   stop(): void {
-    this.setState({ track: null, playing: false, currentTime: 0, duration: 0 });
+    this.setState({
+      track: null,
+      playing: false,
+      pendingAutoplay: false,
+      currentTime: 0,
+      duration: 0,
+    });
   }
 
   setTime(time: number): void {
@@ -81,7 +105,24 @@ export class AudioStore {
   }
 
   fail(error: string): void {
-    this.setState({ playing: false, loading: false, error });
+    this.setState({ playing: false, loading: false, pendingAutoplay: false, error });
+  }
+
+  /** 自动播放被浏览器拦截：暂停并等待用户首次交互 */
+  blocked(): void {
+    this.setState({ playing: false, loading: false, pendingAutoplay: true });
+  }
+
+  /** 自动播放恢复成功 */
+  resume(): void {
+    this.setState({ playing: true, pendingAutoplay: false });
+  }
+
+  /** 清除等待自动播放标记（保留播放状态不变） */
+  resolveAutoplay(): void {
+    if (this.state.pendingAutoplay) {
+      this.setState({ pendingAutoplay: false });
+    }
   }
 
   setLoading(loading: boolean): void {
