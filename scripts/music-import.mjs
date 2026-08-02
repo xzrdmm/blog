@@ -73,14 +73,15 @@ for (const file of files) {
   }
   existingSlugs.add(slug);
 
-  let audioName = `${slug}${outputExt}`;
+  let audioName = `${slug}/audio${outputExt}`;
   let suffix = 2;
   while (existingAudio.has(audioName)) {
-    audioName = `${slug}-${suffix}${outputExt}`;
+    audioName = `${slug}-${suffix}/audio${outputExt}`;
     suffix++;
   }
   existingAudio.add(audioName);
 
+  mkdirSync(join(targetDir, slug), { recursive: true });
   copyFileSync(full, join(targetDir, audioName));
 
   const entry = {
@@ -94,6 +95,20 @@ for (const file of files) {
     review: '',
     draft: false,
   };
+  // 歌词：同目录下 <歌名>.lrc / <歌名>.txt 自动配对，放到 <歌曲>/lyrics.<ext>
+  const lyricFile = readdirSync(sourceDir).find(
+    (name) =>
+      /\.(lrc|txt)$/i.test(name) &&
+      (stripAudioExt(name).toLowerCase() === title.toLowerCase() ||
+        stripAudioExt(name).toLowerCase() === slug.toLowerCase()),
+  );
+  if (lyricFile) {
+    const lyricsDir = resolve('public/music/lyrics');
+    mkdirSync(join(lyricsDir, slug), { recursive: true });
+    const lyricExt = (lyricFile.match(/\.(lrc|txt)$/i)?.[1] ?? 'lrc').toLowerCase();
+    copyFileSync(join(sourceDir, lyricFile), join(lyricsDir, slug, `lyrics.${lyricExt}`));
+    entry.lyrics = `/music/lyrics/${slug}/lyrics.${lyricExt}`;
+  }
   writeFileSync(join(contentDir, `${slug}.json`), `${JSON.stringify(entry, null, 2)}\n`, 'utf8');
   results.push({ file, ok: true, title, artist, audio: audioName });
 }

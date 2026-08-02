@@ -2,8 +2,9 @@
   "title": "JUMP IN",
   "artist": "高橋李依",
   "playlist": "日语",
-  "cover": "/music/covers/JUMP IN.jpg",
-  "audio": "/music/audio/JUMP IN.mp3",
+  "cover": "/music/covers/JUMP IN/cover.jpg",
+  "audio": "/music/audio/JUMP IN/audio.mp3",
+  "lyrics": "/music/lyrics/JUMP IN/lyrics.lrc",
   "rating": "",
   "draft": false
 }

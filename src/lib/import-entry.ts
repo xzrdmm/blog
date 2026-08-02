@@ -28,7 +28,9 @@ export function buildSongEntry(
     suffix++;
   }
 
-  const audioName = `${slug}.${meta.extension}`;
+  // 文件必须放在「字段目录/歌曲名/」子目录里，Keystatic 才能识别；
+  // 直接放在字段目录根下的文件在后台表单中会显示为空，保存时字段会被丢掉。
+  const audioName = `${slug}/audio.${meta.extension}`;
   let coverName: string | undefined;
   if (meta.coverData && meta.coverFormat) {
     const ext = meta.coverFormat.includes('png')
@@ -36,7 +38,7 @@ export function buildSongEntry(
       : meta.coverFormat.includes('webp')
         ? 'webp'
         : 'jpg';
-    coverName = `${slug}.${ext}`;
+    coverName = `${slug}/cover.${ext}`;
   }
 
   const entry = {

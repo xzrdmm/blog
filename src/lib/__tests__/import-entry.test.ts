@@ -25,14 +25,14 @@ describe('buildSongEntry', () => {
       [],
     );
     expect(result.slug).toBe("Tu vivi nell'aria");
-    expect(result.audioName).toBe("Tu vivi nell'aria.mp3");
-    expect(result.coverName).toBe("Tu vivi nell'aria.jpg");
+    expect(result.audioName).toBe("Tu vivi nell'aria/audio.mp3");
+    expect(result.coverName).toBe("Tu vivi nell'aria/cover.jpg");
     expect(result.entry).toMatchObject({
       title: "Tu vivi nell'aria",
       artist: 'Kai Engel',
       playlist: '电子',
-      cover: "/music/covers/Tu vivi nell'aria.jpg",
-      audio: "/music/audio/Tu vivi nell'aria.mp3",
+      cover: "/music/covers/Tu vivi nell'aria/cover.jpg",
+      audio: "/music/audio/Tu vivi nell'aria/audio.mp3",
       draft: false,
     });
   });
@@ -43,7 +43,7 @@ describe('buildSongEntry', () => {
       'x',
       [],
     );
-    expect(result.coverName).toBe('A.png');
+    expect(result.coverName).toBe('A/cover.png');
   });
 
   it('omits cover when no embedded picture', () => {
@@ -60,6 +60,6 @@ describe('buildSongEntry', () => {
   it('appends -2/-3 suffixes on slug collisions', () => {
     const result = buildSongEntry({ ...base, title: 'D' }, 'x', ['D', 'D-2']);
     expect(result.slug).toBe('D-3');
-    expect(result.audioName).toBe('D-3.mp3');
+    expect(result.audioName).toBe('D-3/audio.mp3');
   });
 });

@@ -104,7 +104,7 @@ function injectStyles(): void {
     }
     .ks-preview-btn {
       position: fixed;
-      top: 16px;
+      bottom: 84px;
       right: 16px;
       z-index: 9998;
       padding: 8px 14px;
@@ -120,7 +120,7 @@ function injectStyles(): void {
     }
     .ks-import-btn {
       position: fixed;
-      top: 64px;
+      bottom: 40px;
       right: 16px;
       z-index: 9998;
       padding: 9px 14px;
@@ -310,18 +310,21 @@ async function runSongImport(): Promise<void> {
 
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'audio/*';
+  input.accept = 'audio/*,.lrc,.txt';
   input.multiple = true;
   input.onchange = async () => {
     const files = [...(input.files ?? [])];
-    if (!files.length) return;
+    const audioFiles = files.filter((file) => !/\.(lrc|txt)$/i.test(file.name));
+    const lyricFiles = files.filter((file) => /\.(lrc|txt)$/i.test(file.name));
+    if (!audioFiles.length && !lyricFiles.length) return;
     showToast(`正在解析 ${files.length} 个音频文件…`);
 
     try {
       const results: { name: string; ok: boolean; error?: string }[] = [];
       const encoder = new TextEncoder();
+      const imported: { slug: string; title: string }[] = [];
 
-      for (const file of files) {
+      for (const file of audioFiles) {
         try {
           const meta = await parseBlob(file);
           const title =
@@ -342,10 +345,21 @@ async function runSongImport(): Promise<void> {
             existing,
           );
           existing.push(built.slug);
+          imported.push({ slug: built.slug, title: built.entry.title as string });
 
-          await writeFile(audioDir, built.audioName, new Uint8Array(await file.arrayBuffer()));
+          const audioSubDir = await resolveDir(audioDir, built.slug);
+          await writeFile(
+            audioSubDir,
+            built.audioName.split('/').pop() ?? `audio.${extension}`,
+            new Uint8Array(await file.arrayBuffer()),
+          );
           if (built.coverName && picture) {
-            await writeFile(coversDir, built.coverName, new Uint8Array(picture.data));
+            const coverSubDir = await resolveDir(coversDir, built.slug);
+            await writeFile(
+              coverSubDir,
+              built.coverName.split('/').pop() ?? 'cover',
+              new Uint8Array(picture.data),
+            );
           }
           await writeFile(
             entriesDir,
@@ -372,8 +386,54 @@ async function runSongImport(): Promise<void> {
           results.push({ name: file.name, ok: false, error: String(error) });
         }
       }
+      // 歌词文件（.lrc/.txt）自动匹配同名歌曲，放进 <歌曲>/lyrics.<ext> 子目录
+      const lyricsDir = await resolveDir(root, 'public/music/lyrics');
+      const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+      let lyricsOk = 0;
+      for (const file of lyricFiles) {
+        try {
+          const base = file.name.replace(/\.(lrc|txt)$/i, '').trim();
+          let match = imported.find(
+            (item) => norm(item.slug) === norm(base) || norm(item.title) === norm(base),
+          );
+          if (!match) {
+            const slugs = await listJsonSlugs(entriesDir);
+            const existingSlug = slugs.find((slug) => norm(slug) === norm(base));
+            if (existingSlug) match = { slug: existingSlug, title: base };
+          }
+          if (!match) {
+            results.push({
+              name: file.name,
+              ok: false,
+              error: `没有找到同名歌曲「${base}」，请先导入对应的音频`,
+            });
+            continue;
+          }
+          const ext = (file.name.match(/\.(lrc|txt)$/i)?.[1] ?? 'lrc').toLowerCase();
+          const lyricSubDir = await resolveDir(lyricsDir, match.slug);
+          const lyricName = `lyrics.${ext}`;
+          await writeFile(lyricSubDir, lyricName, new Uint8Array(await file.arrayBuffer()));
+          const entryHandle = await entriesDir.getFileHandle(`${match.slug}.json`);
+          const entryFile = await entryHandle.getFile();
+          const entry = JSON.parse(await entryFile.text()) as Record<string, unknown>;
+          entry.lyrics = `/music/lyrics/${match.slug}/${lyricName}`;
+          await writeFile(
+            entriesDir,
+            `${match.slug}.json`,
+            encoder.encode(`${JSON.stringify(entry, null, 2)}\n`),
+          );
+          lyricsOk++;
+          results.push({ name: file.name, ok: true });
+        } catch (error) {
+          results.push({ name: file.name, ok: false, error: String(error) });
+        }
+      }
+
       const okCount = results.filter((result) => result.ok).length;
       showToast(`导入完成：成功 ${okCount} / ${files.length} 首（歌单「${playlist}」）`);
+      if (lyricsOk > 0) {
+        showToast(`歌词导入完成：成功 ${lyricsOk} / ${lyricFiles.length} 个`);
+      }
       if (okCount < files.length) {
         console.warn(
           '[keystatic-helper] 导入失败项：',
@@ -385,6 +445,159 @@ async function runSongImport(): Promise<void> {
     }
   };
   input.click();
+}
+
+async function tryProjectRoot(): Promise<FileSystemDirectoryHandle | null> {
+  try {
+    const stored = await idbGet('root');
+    if (!stored) return null;
+    const permissioned = stored as PermissionedDirectoryHandle;
+    const state = await permissioned.queryPermission?.({ mode: 'readwrite' });
+    return state === 'granted' ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+async function listFileNames(dir: FileSystemDirectoryHandle): Promise<string[]> {
+  const names: string[] = [];
+  for await (const [name, handle] of dir.entries()) {
+    if (handle.kind === 'file') names.push(name);
+  }
+  return names;
+}
+
+async function moveFile(
+  fromDir: FileSystemDirectoryHandle,
+  name: string,
+  toDir: FileSystemDirectoryHandle,
+  targetName: string,
+): Promise<void> {
+  const handle = await fromDir.getFileHandle(name);
+  const file = await handle.getFile();
+  await writeFile(toDir, targetName, new Uint8Array(await file.arrayBuffer()));
+  await fromDir.removeEntry(name);
+}
+
+interface SongAssetField {
+  key: 'audio' | 'cover' | 'lyrics';
+  dir: string;
+  publicPrefix: string;
+  label: string;
+}
+
+async function repairSongEntry(
+  root: FileSystemDirectoryHandle,
+  slug: string,
+): Promise<SongAssetField[]> {
+  const entriesDir = await resolveDir(root, 'src/content/songs');
+  let entry: Record<string, unknown>;
+  try {
+    const handle = await entriesDir.getFileHandle(`${slug}.json`);
+    const file = await handle.getFile();
+    entry = JSON.parse(await file.text()) as Record<string, unknown>;
+  } catch {
+    return [];
+  }
+
+  const fields: SongAssetField[] = [
+    { key: 'audio', dir: 'public/music/audio', publicPrefix: '/music/audio', label: '音频' },
+    { key: 'cover', dir: 'public/music/covers', publicPrefix: '/music/covers', label: '封面' },
+    { key: 'lyrics', dir: 'public/music/lyrics', publicPrefix: '/music/lyrics', label: '歌词' },
+  ];
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const changed: SongAssetField[] = [];
+
+  for (const field of fields) {
+    const value = typeof entry[field.key] === 'string' ? (entry[field.key] as string).trim() : '';
+    const fieldDir = await resolveDir(root, field.dir);
+    const subDir = await resolveDir(fieldDir, slug);
+    const fileExists = async (dir: FileSystemDirectoryHandle, name: string): Promise<boolean> => {
+      try {
+        const handle = await dir.getFileHandle(name);
+        await handle.getFile();
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    const publicPathOf = (name: string) => `${field.publicPrefix}/${slug}/${name}`;
+
+    if (value) {
+      const rel = value.replace(field.publicPrefix, '').replace(/^\/+/, '');
+      const parts = rel.split('/').filter(Boolean);
+      const basename = parts[parts.length - 1] ?? '';
+      if (parts.length === 1) {
+        // 引用的是字段目录根下的文件：Keystatic 认不出，移到 <slug>/ 子目录
+        if (basename && (await fileExists(fieldDir, basename))) {
+          await moveFile(fieldDir, basename, subDir, basename);
+          entry[field.key] = publicPathOf(basename);
+          changed.push(field);
+        }
+      } else if (!basename || !(await fileExists(subDir, basename))) {
+        // 子目录引用但文件缺失：尝试从字段目录根找回
+        const rootNames = await listFileNames(fieldDir);
+        const match = rootNames.find((name) => norm(name.replace(/\.[^.]+$/, '')) === norm(slug));
+        if (match) {
+          await moveFile(fieldDir, match, subDir, match);
+          entry[field.key] = publicPathOf(match);
+          changed.push(field);
+        }
+      }
+      continue;
+    }
+
+    // 字段为空：先找 <slug>/ 子目录，再找字段目录根
+    const subNames = await listFileNames(subDir);
+    let best: string | undefined =
+      subNames.find((name) => new RegExp(`^${field.key}\\.`, 'i').test(name)) ?? subNames[0];
+    if (best) {
+      entry[field.key] = publicPathOf(best);
+      changed.push(field);
+      continue;
+    }
+    const rootNames = await listFileNames(fieldDir);
+    const title = typeof entry.title === 'string' ? entry.title : slug;
+    best = rootNames.find(
+      (name) =>
+        norm(name.replace(/\.[^.]+$/, '')) === norm(slug) ||
+        norm(name.replace(/\.[^.]+$/, '')) === norm(title),
+    );
+    if (best) {
+      await moveFile(fieldDir, best, subDir, best);
+      entry[field.key] = publicPathOf(best);
+      changed.push(field);
+    }
+  }
+
+  if (changed.length === 0) return [];
+  await writeFile(
+    entriesDir,
+    `${slug}.json`,
+    new TextEncoder().encode(`${JSON.stringify(entry, null, 2)}\n`),
+  );
+  return changed;
+}
+
+function installSaveRepair(): void {
+  const match = location.pathname.match(/^\/keystatic\/collection\/songs\/item\/([^/]+)/);
+  if (!match) return;
+  const slug = decodeURIComponent(match[1]);
+  window.setTimeout(() => {
+    void (async () => {
+      try {
+        const root = await tryProjectRoot();
+        if (!root) return;
+        const changed = await repairSongEntry(root, slug);
+        if (changed.length > 0) {
+          showToast(`已自动补回被后台保存丢失的字段：${changed.map((f) => f.label).join('、')}，即将刷新`);
+          window.setTimeout(() => location.reload(), 1200);
+        }
+      } catch {
+        // 无目录权限或读取失败时静默跳过
+      }
+    })();
+  }, 1500);
 }
 
 function installSongImporter(): void {
@@ -498,10 +711,11 @@ function enhanceField(button: HTMLButtonElement): void {
 
   const apply = () => {
     const download = group.querySelector<HTMLAnchorElement | HTMLButtonElement>('[download]');
-    const hasRemove = [...group.querySelectorAll('button')].some(
-      (b) => b.textContent.trim() === 'Remove',
+    const removeButton = [...group.querySelectorAll('button')].find(
+      (b) => /^(Remove|\u79fb\u9664)$/.test(b.textContent.trim()),
     );
-    const valuePresent = Boolean(download) || hasRemove;
+    const coverImg = group.querySelector<HTMLImageElement>('img:not(.ks-preview)');
+    const valuePresent = Boolean(download) || Boolean(removeButton) || Boolean(coverImg);
     const chip = group.querySelector<HTMLElement>('.ks-chip');
 
     if (!valuePresent) {
@@ -559,6 +773,7 @@ function init(): void {
   installSaveFeedback();
   installPreviewButton();
   installSongImporter();
+  installSaveRepair();
   let scanTimer: number | undefined;
   const scan = () => {
     translateUI();
