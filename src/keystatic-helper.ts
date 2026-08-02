@@ -726,6 +726,12 @@ function enhanceField(button: HTMLButtonElement): void {
 
     if (download) {
       const filename = download.getAttribute('download') ?? '文件';
+      const chipText =
+        label === '音频文件'
+          ? `已选择音频 ✓ 📎 ${filename}`
+          : label === '歌词字幕'
+            ? `已选择歌词 ✓ 📎 ${filename}`
+            : `📎 ${filename}`;
       // 兜底：若按钮仍是英文 "Download"，改为中文避免和播放混淆
       if (download.textContent?.trim() === 'Download') {
         download.textContent = '下载文件';
@@ -733,10 +739,10 @@ function enhanceField(button: HTMLButtonElement): void {
       if (!chip) {
         const el = document.createElement('span');
         el.className = 'ks-chip';
-        el.textContent = `📎 ${filename}`;
+        el.textContent = chipText;
         group.appendChild(el);
-      } else if (chip.textContent !== `📎 ${filename}`) {
-        chip.textContent = `📎 ${filename}`;
+      } else if (chip.textContent !== chipText) {
+        chip.textContent = chipText;
       }
 
       if (label === '封面' && !group.querySelector('.ks-preview')) {
