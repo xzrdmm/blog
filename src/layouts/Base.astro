@@ -173,10 +173,10 @@ const bgStyle = bgImage
     </footer>
 
     <AudioHost client:load transition:persist />
-    <ScrollProgress client:load />
-    <BackToTop client:load />
-    <FloatingClock client:load />
-    <SearchButton client:load base={base} />
+    <ScrollProgress client:idle />
+    <BackToTop client:idle />
+    <FloatingClock client:idle />
+    <SearchButton client:idle base={base} />
     <MiniPlayer client:load transition:persist />
 
     <script is:inline data-base={base}>

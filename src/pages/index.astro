@@ -74,7 +74,7 @@ const postItems = curateFeaturedPosts(posts, siteConfig.featuredPosts, 6).map((p
         <a class="section-more" href={`${base}tags/`}>文章 →</a>
       </div>
     {postItems.length > 0 ? (
-      <HomeMasonry client:load posts={postItems} base={base} />
+      <HomeMasonry client:visible posts={postItems} base={base} />
     ) : (
       <p class="empty">还没有内容，去后台写第一篇吧。</p>
     )}
@@ -98,7 +98,7 @@ const postItems = curateFeaturedPosts(posts, siteConfig.featuredPosts, 6).map((p
         <h2>音乐</h2>
         <a class="section-more" href={`${base}music/`}>查看全部 →</a>
       </div>
-      <HomeMusicSection client:load songs={musicSectionSongs} />
+      <HomeMusicSection client:visible songs={musicSectionSongs} />
     </section>
   )}
 </Base>
