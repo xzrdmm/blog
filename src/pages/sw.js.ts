@@ -3,7 +3,7 @@ import type { APIContext } from 'astro';
 export async function GET(_context: APIContext) {
   const base = import.meta.env.BASE_URL;
   const code = `
-const CACHE = 'blog-v1';
+const CACHE = 'blog-v2';
 const BASE = ${JSON.stringify(base)};
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -36,17 +36,18 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((response) => {
+    caches.match(request).then((cached) => {
+      const update = fetch(request)
+        .then((response) => {
           if (response.ok) {
             const copy = response.clone();
             caches.open(CACHE).then((cache) => cache.put(request, copy));
           }
           return response;
-        }),
-    ),
+        })
+        .catch(() => cached);
+      return cached || update;
+    }),
   );
 });
 `;
