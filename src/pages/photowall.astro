@@ -23,6 +23,7 @@ const photos = (await getCollection('photos'))
               src={assetPath(photo.data.image)}
               alt={photo.data.caption}
               loading="lazy"
+              decoding="async"
               class="w-full"
             />
           )}

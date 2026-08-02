@@ -23,7 +23,13 @@ export default function HomeMasonry({ posts, base }: Props) {
           className="glass card-hover reveal flex h-full flex-col overflow-hidden rounded-2xl"
         >
           {post.cover && (
-            <img src={post.cover} alt={post.title} loading="lazy" className="aspect-video w-full object-cover" />
+            <img
+              src={post.cover}
+              alt={post.title}
+              loading="lazy"
+              decoding="async"
+              className="aspect-video w-full object-cover"
+            />
           )}
           <div className="flex flex-1 flex-col p-5">
             <div className="text-xs text-[var(--text-3)]">{formatDate(post.date)}</div>

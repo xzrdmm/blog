@@ -45,7 +45,12 @@ export default function MiniPlayer() {
         <div className="widget-glass widget-layer anim-pop-in right-5 bottom-5 z-[90] w-[300px] max-w-[calc(100vw-40px)] rounded-2xl p-3">
           <div className="flex items-center gap-3">
             {track.cover ? (
-              <img src={track.cover} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
+              <img
+                src={track.cover}
+                alt=""
+                decoding="async"
+                className="h-12 w-12 shrink-0 rounded-xl object-cover"
+              />
             ) : (
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/60 to-cyan-400/50 text-xl text-white">
                 ♪

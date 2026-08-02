@@ -87,7 +87,12 @@ export default function MusicPageClient({ songs }: Props) {
                     }`}
                   >
                     {song.cover ? (
-                      <img src={song.cover} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                      <img
+                        src={song.cover}
+                        alt=""
+                        decoding="async"
+                        className="h-11 w-11 shrink-0 rounded-lg object-cover"
+                      />
                     ) : (
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/50 to-cyan-400/40 text-base text-white">♪</div>
                     )}
@@ -152,7 +157,12 @@ export default function MusicPageClient({ songs }: Props) {
               <>
                 <div className="flex items-center gap-3">
                   {selected.cover ? (
-                    <img src={selected.cover} alt="" className="h-14 w-14 rounded-xl object-cover" />
+                    <img
+                      src={selected.cover}
+                      alt=""
+                      decoding="async"
+                      className="h-14 w-14 rounded-xl object-cover"
+                    />
                   ) : (
                     <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/50 to-cyan-400/40 text-xl text-white">♪</div>
                   )}

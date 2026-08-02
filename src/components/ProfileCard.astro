@@ -7,7 +7,13 @@ const email = siteConfig.social.email.trim();
 ---
 
 <aside class="profile-card glass">
-  <img class="profile-avatar" src={assetPath(siteConfig.avatar)} alt={`${siteConfig.title} 的头像`} />
+  <img
+    class="profile-avatar"
+    src={assetPath(siteConfig.avatar)}
+    alt={`${siteConfig.title} 的头像`}
+    decoding="async"
+    fetchpriority="high"
+  />
   <h2 class="profile-name">{siteConfig.title}</h2>
   <p class="profile-bio">{siteConfig.bio}</p>
   <div class="profile-socials">

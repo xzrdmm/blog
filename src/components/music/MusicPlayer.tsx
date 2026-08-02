@@ -225,7 +225,12 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     <section className={bare ? 'flex flex-col gap-3' : 'glass flex flex-col gap-3 rounded-2xl p-4'}>
       <div className="flex items-center gap-4">
         {current?.cover ? (
-          <img src={current.cover} alt={current.title} className="h-16 w-16 shrink-0 rounded-xl object-cover shadow-lg" />
+          <img
+            src={current.cover}
+            alt={current.title}
+            decoding="async"
+            className="h-16 w-16 shrink-0 rounded-xl object-cover shadow-lg"
+          />
         ) : (
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/60 to-cyan-400/50 text-xl text-white">♪</div>
         )}
