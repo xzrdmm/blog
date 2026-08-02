@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "music:import": "node scripts/music-import.mjs",
+    "images": "node scripts/optimize-images.mjs",
     "backup": "node scripts/backup.mjs",
     "check": "astro check"
   },
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "sharp": "^0.35.3",
     "vitest": "^3.0.0"
   }
 }

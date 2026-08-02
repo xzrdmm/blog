@@ -33,6 +33,9 @@ jobs:
       - name: Type check
         run: npm run check
 
+      - name: Optimize images
+        run: npm run images
+
       - name: Build
         run: npm run build
 
