@@ -14,7 +14,11 @@ export default function AudioHost() {
     gestureCleanupRef.current?.();
     const audio = audioRef.current;
     if (!audio) return;
-    const tryPlay = () => {
+    const tryPlay = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      // 播放器按钮、链接、输入框等控件交给自己的事件处理，
+      // 避免手势续播与按钮点击（播放/暂停/切歌）互相打架
+      if (target?.closest('button, a, input, select, textarea, [role="button"]')) return;
       cleanup();
       void audio
         .play()
@@ -24,12 +28,10 @@ export default function AudioHost() {
     const cleanup = () => {
       document.removeEventListener('pointerdown', tryPlay);
       document.removeEventListener('touchstart', tryPlay);
-      document.removeEventListener('keydown', tryPlay);
     };
     gestureCleanupRef.current = cleanup;
-    document.addEventListener('pointerdown', tryPlay, { once: true });
-    document.addEventListener('touchstart', tryPlay, { once: true });
-    document.addEventListener('keydown', tryPlay, { once: true });
+    document.addEventListener('pointerdown', tryPlay);
+    document.addEventListener('touchstart', tryPlay);
   }, []);
 
   useEffect(() => {

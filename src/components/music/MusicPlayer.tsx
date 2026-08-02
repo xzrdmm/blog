@@ -137,7 +137,14 @@ export default function MusicPlayer({ songs, ref, bare = false }: Props) {
     playAt((currentIndex + 1) % songs.length);
   }, [currentIndex, songs, displayState.mode, playAt]);
 
-  const togglePlay = useCallback(() => audioStore.toggle(), []);
+  const togglePlay = useCallback(() => {
+    if (audioStore.state.pendingAutoplay) {
+      // 自动播放被拦截后，点击播放按钮 = 直接开始播放
+      audioStore.resume();
+      return;
+    }
+    audioStore.toggle();
+  }, []);
 
   const cycleMode = () => {
     const next: PlayMode =
