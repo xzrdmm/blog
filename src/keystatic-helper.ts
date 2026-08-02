@@ -172,10 +172,15 @@ function installLargeFileGuard(): void {
 }
 
 function installPreviewButton(): void {
+  const existing = document.getElementById('ks-preview-btn');
   const match = location.pathname.match(
     /^\/keystatic\/collection\/(posts|songs|chatters|projects|friends|photos)\/item\/([^/]+)/,
   );
-  if (!match || document.getElementById('ks-preview-btn')) return;
+  if (!match) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
   const [, collection, slug] = match;
 const target = ({
     posts: `/posts/${encodeURIComponent(slug)}/`,
@@ -601,7 +606,12 @@ function installSaveRepair(): void {
 }
 
 function installSongImporter(): void {
-  if (!/^\/keystatic\/collection\/songs\/?$/.test(location.pathname)) return;
+  const existing = document.getElementById('ks-import-btn');
+  if (!/^\/keystatic\/collection\/songs\/?$/.test(location.pathname)) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
   const btn = document.createElement('button');
   btn.id = 'ks-import-btn';
   btn.className = 'ks-import-btn';
@@ -783,6 +793,8 @@ function init(): void {
   let scanTimer: number | undefined;
   const scan = () => {
     translateUI();
+    installPreviewButton();
+    installSongImporter();
     for (const button of document.querySelectorAll<HTMLButtonElement>('button')) {
       const text = button.textContent?.trim();
       if (text === 'Choose file' || text === '选择文件') {
