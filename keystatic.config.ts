@@ -102,7 +102,7 @@ export default config({
           label: '音频文件',
           directory: 'public/music/audio',
           publicPath: '/music/audio',
-          description: '支持 mp3 / flac / m4a / ogg / wav；后台上传上限 1MB（大文件用 npm run music:import 批量导入）。',
+          description: '支持 mp3 / flac / m4a / ogg / wav；后台上传上限 15MB（更大文件用 npm run music:import 批量导入）。',
         }),
         lyrics: fields.file({
           label: '歌词字幕',

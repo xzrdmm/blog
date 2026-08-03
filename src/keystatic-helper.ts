@@ -9,8 +9,10 @@ import { buildSongEntry } from './lib/import-entry';
 import { parsePostFrontmatter } from './lib/content';
 
 const FIELD_LABELS = new Set(['封面', '音频文件', '歌词字幕']);
-// 超过该大小的文件不让 Keystatic 读取（Keystatic 读取大文件会严重卡顿）
-const MAX_ADMIN_FILE_SIZE = 1 * 1024 * 1024;
+// 按文件类型放开后台上传限制（Keystatic 读取超大文件会严重卡顿，所以仍保留上限）
+const MAX_ADMIN_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_ADMIN_AUDIO_SIZE = 15 * 1024 * 1024;
+const MAX_ADMIN_OTHER_SIZE = 5 * 1024 * 1024;
 // 已解析过元数据的文件，避免 React 重渲染后重复解析大文件导致卡顿
 const autofilledSources = new Set<string>();
 
@@ -211,11 +213,23 @@ function installLargeFileGuard(): void {
     (event) => {
       const input = event.target as HTMLInputElement | null;
       const file = input?.files?.[0];
-      if (input?.type === 'file' && file && file.size > MAX_ADMIN_FILE_SIZE) {
+      if (input?.type !== 'file' || !file) return;
+      const isImage =
+        file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|avif|bmp)$/i.test(file.name);
+      const isAudio =
+        file.type.startsWith('audio/') || /\.(mp3|flac|m4a|ogg|wav)$/i.test(file.name);
+      const limit = isImage ? MAX_ADMIN_IMAGE_SIZE : isAudio ? MAX_ADMIN_AUDIO_SIZE : MAX_ADMIN_OTHER_SIZE;
+      if (file.size > limit) {
         event.stopImmediatePropagation();
+        const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+        const limitMB = limit / 1024 / 1024;
+        const message = isImage
+          ? `「${file.name}」(${sizeMB}MB) 超过后台上传上限 ${limitMB}MB，请压缩图片后再上传`
+          : isAudio
+            ? `「${file.name}」(${sizeMB}MB) 超过后台上传上限 ${limitMB}MB，为避免页面崩溃，请改用批量导入：npm run music:import -- <文件夹> <歌单名>`
+            : `「${file.name}」(${sizeMB}MB) 超过后台上传上限 ${limitMB}MB`;
         showToast(
-          `「${file.name}」(${(file.size / 1024 / 1024).toFixed(1)}MB) 超过后台上传上限 1MB，` +
-            '为避免页面崩溃，请改用批量导入：npm run music:import -- <文件夹> <歌单名>',
+          message,
         );
       }
     },
