@@ -4,7 +4,6 @@ date: 2026-08-07
 excerpt: 一篇关于这个博客怎么搭起来的说明：静态站点、Git 管理内容、自带音乐播放器，以及推送即发布的部署流程。
 cover: /images/posts/tech-stack-and-features/cover.webp
 tags:
-  - 博客
   - 技术
 draft: false
 pinned: false

@@ -2,14 +2,13 @@
 title: 写了个右键就能用的剪贴板历史
 date: 2026-08-08
 excerpt: Windows 托盘小工具：复制过的文本、图片、文件路径都在，右键输入框就能翻出来粘贴。
+cover: /images/posts/clipboard-history/cover.png
 tags:
-  - Windows
-  - C#
   - 工具
+  - 技术
 draft: false
 pinned: false
 ---
-
 我复制东西有个毛病：复制完转头就忘，等要粘贴的时候已经想不起内容放哪了。Windows 自带的剪贴板历史（Win+V）不是不能用，但我总记不住按快捷键。所以干脆写了个小工具，把历史直接挂到右键上。
 
 ClipboardHistory 是一个跑在系统托盘里的 Windows 程序，C#/.NET 8 + WPF 写的。平时它安静地监听剪贴板：文本、图片、文件路径都会记录，默认保留最近 10 条，重复内容自动去重，密码框里复制的不会记。数据存在 `%LOCALAPPDATA%\ClipboardHistory` 下，一个 JSON 索引加一个图片目录，重启不丢。
